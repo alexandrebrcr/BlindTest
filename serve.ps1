@@ -1,11 +1,11 @@
-$listener = New-Object System.Net.HttpListener
+$baseDir = $PSScriptRoot
 $port = 8080
 $prefix = "http://127.0.0.1:$port/"
+
+$listener = New-Object System.Net.HttpListener
 $listener.Prefixes.Add($prefix)
 $listener.Start()
-Write-Output "HTTP Server listening on $prefix"
-
-$baseDir = "c:\Users\alexa\Documents\0 - Étude générale\Logiciels\BlindTest"
+Write-Output "HTTP Server started at $prefix serving $baseDir"
 
 $mimeTypes = @{
     ".html" = "text/html; charset=utf-8"
@@ -20,31 +20,42 @@ $mimeTypes = @{
 try {
     while ($listener.IsListening) {
         $context = $listener.GetContext()
-        $request = $context.Request
-        $response = $context.Response
+        try {
+            $request = $context.Request
+            $response = $context.Response
 
-        $localPath = $request.Url.LocalPath
-        if ($localPath -eq "/" -or $localPath -eq "") {
-            $localPath = "/index.html"
+            $rel = [System.Uri]::UnescapeDataString($request.Url.AbsolutePath).TrimStart('/')
+            if ([string]::IsNullOrWhiteSpace($rel)) {
+                $rel = "index.html"
+            }
+
+            $filePath = [System.IO.Path]::Combine($baseDir, $rel.Replace('/', '\'))
+
+            if ([System.IO.File]::Exists($filePath)) {
+                $ext = [System.IO.Path]::GetExtension($filePath).ToLower()
+                $mime = $mimeTypes[$ext]
+                if (-not $mime) { $mime = "application/octet-stream" }
+                $response.ContentType = $mime
+                $response.StatusCode = 200
+
+                $bytes = [System.IO.File]::ReadAllBytes($filePath)
+                $response.ContentLength64 = $bytes.Length
+
+                if ($request.HttpMethod -ne "HEAD") {
+                    $response.OutputStream.Write($bytes, 0, $bytes.Length)
+                }
+            } else {
+                $response.StatusCode = 404
+                $errBytes = [System.Text.Encoding]::UTF8.GetBytes("404 File Not Found: $rel")
+                $response.ContentLength64 = $errBytes.Length
+                if ($request.HttpMethod -ne "HEAD") {
+                    $response.OutputStream.Write($errBytes, 0, $errBytes.Length)
+                }
+            }
+            $response.OutputStream.Close()
+        } catch {
+            Write-Warning "Request handling error: $_"
         }
-
-        $filePath = Join-Path $baseDir ($localPath.TrimStart('/').Replace('/', '\'))
-
-        if (Test-Path $filePath -PathType Leaf) {
-            $ext = [System.IO.Path]::GetExtension($filePath).ToLower()
-            $mime = $mimeTypes[$ext]
-            if (-not $mime) { $mime = "application/octet-stream" }
-            $response.ContentType = $mime
-
-            $bytes = [System.IO.File]::ReadAllBytes($filePath)
-            $response.ContentLength64 = $bytes.Length
-            $response.OutputStream.Write($bytes, 0, $bytes.Length)
-        } else {
-            $response.StatusCode = 404
-            $errBytes = [System.Text.Encoding]::UTF8.GetBytes("404 Not Found")
-            $response.OutputStream.Write($errBytes, 0, $errBytes.Length)
-        }
-        $response.OutputStream.Close()
     }
 } finally {
     $listener.Stop()
