@@ -957,9 +957,9 @@ html, body {
   overflow-y: auto !important;
 }
 
-#modal-ai-settings:not(.active),
-#modal-instructions:not(.active) {
-  display: none !important;
+#modal-ai-settings,
+#modal-instructions {
+  display: none;
 }
 
 #modal-ai-settings.active,

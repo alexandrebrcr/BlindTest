@@ -215,9 +215,9 @@
 
 /* Modal Popup quand un joueur a buzzé */
 .buzzer-modal-overlay {
-  position: absolute;
-  inset: 0;
-  z-index: 50;
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 99999 !important;
   background: rgba(5, 6, 15, 0.88);
   backdrop-filter: blur(16px);
   display: none;

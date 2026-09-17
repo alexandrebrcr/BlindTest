@@ -22,6 +22,71 @@
   <!-- Librairies WebRTC P2P et QR Code (locales & autonomes) -->
   <script src="./js/qrcode.min.js"></script>
   <script src="./js/peerjs.min.js"></script>
+  <!-- Fonctions globales d acces immediat aux modales -->
+  <script>
+    window.openAiModal = function() {
+      var m = document.getElementById('modal-ai-settings');
+      if (m) {
+        m.classList.add('active');
+        m.style.display = 'flex';
+      }
+      var k = document.getElementById('input-gemini-key');
+      if (k) k.value = localStorage.getItem('blindtest_gemini_api_key') || '';
+      var p = document.getElementById('input-custom-proxy');
+      if (p) p.value = localStorage.getItem('blindtest_ai_proxy_url') || '';
+      var st = document.getElementById('ai-key-status');
+      if (st) {
+        var hasK = localStorage.getItem('blindtest_gemini_api_key');
+        var hasP = localStorage.getItem('blindtest_ai_proxy_url');
+        if (hasK) {
+          st.className = 'ai-key-status success';
+          st.textContent = '\u2705 Cl\u00e9 Google Gemini active (g\u00e9n\u00e9ration < 1s)';
+        } else if (hasP) {
+          st.className = 'ai-key-status success';
+          st.textContent = '\u2705 Proxy Cloudflare Worker actif';
+        } else {
+          st.className = 'ai-key-status';
+          st.textContent = '\u2139\ufe0f Aucune cl\u00e9 enregistr\u00e9e (mode gratuit standard)';
+        }
+      }
+    };
+    window.closeAiModal = function() {
+      var m = document.getElementById('modal-ai-settings');
+      if (m) {
+        m.classList.remove('active');
+        m.style.display = 'none';
+      }
+    };
+    window.saveAiModalSettings = function() {
+      var k = document.getElementById('input-gemini-key');
+      var p = document.getElementById('input-custom-proxy');
+      if (k) {
+        var val = k.value.trim();
+        if (val) localStorage.setItem('blindtest_gemini_api_key', val);
+        else localStorage.removeItem('blindtest_gemini_api_key');
+      }
+      if (p) {
+        var pVal = p.value.trim();
+        if (pVal) localStorage.setItem('blindtest_ai_proxy_url', pVal);
+        else localStorage.removeItem('blindtest_ai_proxy_url');
+      }
+      window.closeAiModal();
+    };
+    window.openInstructionsModal = function() {
+      var m = document.getElementById('modal-instructions');
+      if (m) {
+        m.classList.add('active');
+        m.style.display = 'flex';
+      }
+    };
+    window.closeInstructionsModal = function() {
+      var m = document.getElementById('modal-instructions');
+      if (m) {
+        m.classList.remove('active');
+        m.style.display = 'none';
+      }
+    };
+  </script>
 </head>
 <body>
 
@@ -35,8 +100,8 @@
       </div>
       <div class="header-actions">
         <button class="icon-btn" id="btn-sound-toggle" title="Activer / Désactiver les effets sonores">🔊</button>
-        <button class="icon-btn" id="btn-ai-settings" title="Réglages IA (Google Gemini)" onclick="const m = document.getElementById('modal-ai-settings'); if(m){ m.style.display='flex'; m.classList.add('active'); }">🤖</button>
-        <button class="icon-btn" id="btn-info-modal" title="Règles et installation">ℹ️</button>
+        <button class="icon-btn" id="btn-ai-settings" title="R&#233;glages IA (Google Gemini)" onclick="openAiModal()">🤖</button>
+        <button class="icon-btn" id="btn-info-modal" title="R&#232;gles et installation" onclick="openInstructionsModal()">ℹ️</button>
       </div>
     </header>
 
@@ -536,13 +601,13 @@
   </div>
 
   <!-- Modal Réglages IA (Google Gemini) -->
-  <div class="buzzer-modal-overlay" id="modal-ai-settings" style="display: none; position: fixed; inset: 0; z-index: 99999; background: rgba(5, 6, 15, 0.92); backdrop-filter: blur(18px); align-items: center; justify-content: center; padding: 1rem; overflow-y: auto;" onclick="if(event.target === this){ this.style.display='none'; this.classList.remove('active'); }">
+  <div class="buzzer-modal-overlay" id="modal-ai-settings" onclick="if(event.target === this) closeAiModal();">
     <div class="glass-card" style="max-width: 480px; text-align: left; width: 100%;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
         <h3 style="font-family: var(--font-display); font-size: 1.3rem; display: flex; align-items: center; gap: 0.5rem;">
           🤖 Réglages IA (Google Gemini)
         </h3>
-        <button class="icon-btn" id="btn-close-ai-modal" style="width: 32px; height: 32px; font-size: 0.9rem;" title="Fermer" onclick="const m = document.getElementById('modal-ai-settings'); if(m){ m.style.display='none'; m.classList.remove('active'); }">✕</button>
+        <button class="icon-btn" id="btn-close-ai-modal" style="width: 32px; height: 32px; font-size: 0.9rem;" title="Fermer" onclick="closeAiModal()">✕</button>
       </div>
 
       <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem; line-height: 1.4;">
@@ -587,12 +652,12 @@
         </div>
       </details>
 
-      <button class="btn-primary" id="btn-save-ai-settings" onclick="const m = document.getElementById('modal-ai-settings'); if(m){ m.style.display='none'; m.classList.remove('active'); }">Enregistrer les réglages ✅</button>
+      <button class="btn-primary" id="btn-save-ai-settings" onclick="saveAiModalSettings()">Enregistrer les réglages ✅</button>
     </div>
   </div>
 
   <!-- Modal Instructions & PWA -->
-  <div class="buzzer-modal-overlay" id="modal-instructions">
+  <div class="buzzer-modal-overlay" id="modal-instructions" onclick="if(event.target === this) closeInstructionsModal();">
     <div class="glass-card" style="max-width: 440px; text-align: left;">
       <h3 style="font-family: var(--font-display); font-size: 1.3rem; margin-bottom: 0.75rem;">
         📖 Comment jouer ?
@@ -612,20 +677,34 @@
           <strong>🍏 iPhone (Safari) :</strong> Ouvrez le jeu dans <strong>Safari</strong>, appuyez sur le bouton <strong>Partager</strong> (le carré avec la flèche vers le haut 📤 en bas), faites défiler et choisissez <em>"Sur l'écran d'accueil"</em>.
         </p>
       </div>
-      <button class="btn-primary" id="btn-close-instructions">J'ai compris ! 👍</button>
+      <button class="btn-primary" id="btn-close-instructions" onclick="closeInstructionsModal()">J'ai compris ! 👍</button>
     </div>
   </div>
 
   <!-- Script principal ES Module -->
   <script type="module" src="./js/app.js"></script>
 
-  <!-- Enregistrement Service Worker PWA -->
+    <!-- Enregistrement Service Worker PWA -->
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('./sw.js')
-          .then(reg => console.log('Service Worker PWA actif:', reg.scope); reg.update())
-          .catch(err => console.warn('Échec enregistrement SW:', err));
+          .then((reg) => {
+            console.log('Service Worker PWA actif:', reg.scope);
+            reg.update();
+            reg.addEventListener('updatefound', () => {
+              const newWorker = reg.installing;
+              if (newWorker) {
+                newWorker.addEventListener('statechange', () => {
+                  if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                    console.log('Nouvelle version disponible, actualisation...');
+                    window.location.reload();
+                  }
+                });
+              }
+            });
+          })
+          .catch((err) => console.warn('Echec enregistrement SW:', err));
       });
     }
   </script>

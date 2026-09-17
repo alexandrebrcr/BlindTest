@@ -1,5 +1,5 @@
-﻿// Service Worker pour BlindTest Party PWA
-const CACHE_NAME = 'blindtest-v5';
+// Service Worker pour BlindTest Party PWA
+const CACHE_NAME = 'blindtest-v6';
 const STATIC_ASSETS = [
   './',
   './index.html',
@@ -41,7 +41,7 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // Ne pas intercepter les requêtes audio ou API externes en cache strict pour toujours avoir les previews
+  // Ne pas intercepter les requêtes audio ou API externes
   if (
     event.request.url.includes('itunes.apple.com') ||
     event.request.url.includes('mzstatic.com') ||
@@ -52,9 +52,34 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // Pour les requêtes HTML (navigation / page principale), Network-First pour voir les mises à jour immédiatement
+  if (event.request.mode === 'navigate' || event.request.url.includes('index.html')) {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          if (response && response.status === 200) {
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+          }
+          return response;
+        })
+        .catch(() => caches.match(event.request).then((res) => res || caches.match('./index.html')))
+    );
+    return;
+  }
+
+  // Pour les autres ressources (CSS, JS) : Cache avec mise à jour en arrière-plan
   event.respondWith(
-    caches.match(event.request).then((response) => {
-      return response || fetch(event.request).catch(() => caches.match('./index.html'));
+    caches.match(event.request).then((cachedResponse) => {
+      const fetchPromise = fetch(event.request).then((networkResponse) => {
+        if (networkResponse && networkResponse.status === 200) {
+          const clone = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+        }
+        return networkResponse;
+      }).catch(() => null);
+
+      return cachedResponse || fetchPromise;
     })
   );
 });

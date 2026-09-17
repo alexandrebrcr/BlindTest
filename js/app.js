@@ -1,4 +1,4 @@
-﻿// Application Principale BlindTest Party - Orchestrateur & UI Controller
+// Application Principale BlindTest Party - Orchestrateur & UI Controller
 import { CATEGORIES, getCategoryById } from './categories.js';
 import { preparePlaylist } from './itunes-api.js';
 import { audioEngine } from './audio-player.js';
@@ -46,20 +46,19 @@ function showScreen(screenId) {
 // ==========================================================================
 let deferredPrompt = null;
 
+// Intercepte et bloque TOUTE invite ou notification automatique d'installation de Chrome
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  const installBanner = document.getElementById('pwa-install-banner');
+  if (installBanner) installBanner.style.display = 'none';
+});
+
 function initPwaInstall() {
   const installBanner = document.getElementById('pwa-install-banner');
-  // L'utilisateur ne souhaite pas de notification ou bandeau intrusif au démarrage
   if (installBanner) {
     installBanner.style.display = 'none';
   }
-
-  // Intercepte et bloque systématiquement l'infobar ou invite automatique de Chrome
-  window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
-    // On n'affiche aucun bandeau automatique non sollicité
-    if (installBanner) installBanner.style.display = 'none';
-  });
 
   window.addEventListener('appinstalled', () => {
     if (installBanner) installBanner.style.display = 'none';
@@ -79,9 +78,8 @@ function initAiSettings() {
   const btnSave = document.getElementById('btn-save-ai-settings');
   const statusEl = document.getElementById('ai-key-status');
 
-  if (!btnAi || !modalAi) return;
-
   const updateStatus = () => {
+    if (!statusEl) return;
     const key = getGeminiApiKey();
     const proxy = getCustomProxyUrl();
     if (key) {
@@ -96,28 +94,44 @@ function initAiSettings() {
     }
   };
 
-  const closeAiModal = () => {
-    modalAi.classList.remove('active');
-    modalAi.style.display = 'none';
-  };
-
-  btnAi.addEventListener('click', (e) => {
-    e.preventDefault();
-    sfx.init();
+  const openAiModal = () => {
+    if (modalAi) {
+      modalAi.classList.add('active');
+      modalAi.style.display = 'flex';
+    }
     if (inputKey) inputKey.value = getGeminiApiKey();
     if (inputProxy) inputProxy.value = getCustomProxyUrl();
     updateStatus();
-    modalAi.classList.add('active');
-    modalAi.style.display = 'flex';
-  });
+  };
+
+  const closeAiModal = () => {
+    if (modalAi) {
+      modalAi.classList.remove('active');
+      modalAi.style.display = 'none';
+    }
+  };
+
+  // Expose globalement pour que les déclencheurs HTML fonctionnent en toute circonstance
+  window.openAiModal = openAiModal;
+  window.closeAiModal = closeAiModal;
+
+  if (btnAi) {
+    btnAi.addEventListener('click', (e) => {
+      e.preventDefault();
+      sfx.init();
+      openAiModal();
+    });
+  }
 
   if (btnClose) {
     btnClose.addEventListener('click', closeAiModal);
   }
 
-  modalAi.addEventListener('click', (e) => {
-    if (e.target === modalAi) closeAiModal();
-  });
+  if (modalAi) {
+    modalAi.addEventListener('click', (e) => {
+      if (e.target === modalAi) closeAiModal();
+    });
+  }
 
   if (btnToggleEye && inputKey) {
     btnToggleEye.addEventListener('click', () => {
@@ -146,7 +160,7 @@ function initAiSettings() {
         setGeminiApiKey(keyVal);
       } else {
         statusEl.className = 'ai-key-status error';
-        statusEl.textContent = `❌ ${res.message}`;
+        statusEl.textContent = '❌ ' + (res.message || '');
       }
     });
   }
@@ -1135,9 +1149,11 @@ function initRoomClientFlow(roomCode, playerName, playerColor) {
 // ==========================================================================
 // Démarrage initial au chargement du DOM
 // ==========================================================================
-window.addEventListener('DOMContentLoaded', () => {
+function initApp() {
   initCategories();
   initSettings();
+  initPwaInstall();
+  initAiSettings();
 
   // Détection du paramètre URL ?room=CODE (scan de QR Code)
   const params = new URLSearchParams(window.location.search);
@@ -1147,5 +1163,10 @@ window.addEventListener('DOMContentLoaded', () => {
     const input = document.getElementById('input-room-code');
     if (input) input.value = room.toUpperCase();
   }
-});
+}
 
+if (document.readyState === 'loading') {
+  window.addEventListener('DOMContentLoaded', initApp);
+} else {
+  initApp();
+}
