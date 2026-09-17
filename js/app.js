@@ -437,8 +437,11 @@ function startSoloGame(tracks) {
       vinylDisc.classList.add('spinning');
 
       // Réinitialisation des textes
+      const isMovieCategory = state.selectedCategoryId === 'disney_dessins_animes' ||
+                              state.selectedCategoryId === 'cinema_series' ||
+                              !!e.track.movieTitle;
       document.getElementById('solo-reveal-title').textContent = 'Écoutez bien...';
-      document.getElementById('solo-reveal-artist').textContent = 'Quel est ce titre / artiste ?';
+      document.getElementById('solo-reveal-artist').textContent = isMovieCategory ? 'Quel est ce film / dessin animé ?' : 'Quel est ce titre / artiste ?';
       document.getElementById('solo-reveal-meta').textContent = '';
 
       btnNext.style.display = 'none';
@@ -446,15 +449,23 @@ function startSoloGame(tracks) {
 
       // Remplissage QCM
       if (state.currentMode === 'qcm') {
-        qcmContainer.innerHTML = e.track.options.map((opt, i) => `
-          <button class="qcm-btn" data-index="${i}">
-            <div>
-              <div class="qcm-btn-title">${opt.title}</div>
-              <div class="qcm-btn-artist">${opt.artist}</div>
-            </div>
-            <span class="qcm-icon">🎵</span>
-          </button>
-        `).join('');
+        qcmContainer.innerHTML = e.track.options.map((opt, i) => {
+          const hasMovie = !!(opt.movieTitle || opt.movie);
+          const movieName = opt.movieTitle || opt.movie;
+          const mainTitle = (isMovieCategory && hasMovie) ? movieName : opt.title;
+          const subtitle = (isMovieCategory && hasMovie) ? opt.title : opt.artist;
+          const icon = (isMovieCategory && hasMovie) ? '🎬' : '🎵';
+
+          return `
+            <button class="qcm-btn" data-index="${i}">
+              <div>
+                <div class="qcm-btn-title">${mainTitle}</div>
+                <div class="qcm-btn-artist">${subtitle}</div>
+              </div>
+              <span class="qcm-icon">${icon}</span>
+            </button>
+          `;
+        }).join('');
 
         qcmContainer.querySelectorAll('.qcm-btn').forEach((btn, idx) => {
           btn.addEventListener('click', () => {
@@ -483,8 +494,14 @@ function startSoloGame(tracks) {
     mysteryIcon.classList.add('hidden');
     timerFill.style.width = '0%';
 
-    document.getElementById('solo-reveal-title').textContent = res.track.title;
-    document.getElementById('solo-reveal-artist').textContent = res.track.artist;
+    const movieName = res.track.movieTitle || res.track.movie;
+    if (movieName) {
+      document.getElementById('solo-reveal-title').textContent = `🎬 ${movieName}`;
+      document.getElementById('solo-reveal-artist').textContent = `Morceau : "${res.track.title}" • ${res.track.artist}`;
+    } else {
+      document.getElementById('solo-reveal-title').textContent = res.track.title;
+      document.getElementById('solo-reveal-artist').textContent = res.track.artist;
+    }
     document.getElementById('solo-reveal-meta').textContent = `Sortie en ${res.track.year || 'Inconnue'} • ${res.track.genre || ''}`;
 
     document.getElementById('solo-score-display').textContent = `${res.score} pts`;
@@ -497,7 +514,7 @@ function startSoloGame(tracks) {
         const opt = res.track.options[idx];
         if (opt.isCorrect) {
           btn.classList.add('correct');
-        } else if (res.chosenAnswer && res.chosenAnswer.title === opt.title && !opt.isCorrect) {
+        } else if (res.chosenAnswer && (res.chosenAnswer === opt || res.chosenAnswer.title === opt.title) && !opt.isCorrect) {
           btn.classList.add('wrong');
         }
       });
@@ -517,21 +534,25 @@ function startSoloGame(tracks) {
 
     // Historique des morceaux avec réécoute
     const listEl = document.getElementById('gameover-history-list');
-    listEl.innerHTML = summary.history.map(item => `
-      <div class="history-item">
-        <div style="display: flex; align-items: center; gap: 0.6rem;">
-          <img src="${item.track.artworkUrl}" style="width: 38px; height: 38px; border-radius: 6px; object-fit: cover;">
-          <div>
-            <div style="font-weight: 700;">${item.track.title}</div>
-            <div style="font-size: 0.75rem; color: var(--text-muted);">${item.track.artist} (${item.track.year})</div>
+    listEl.innerHTML = summary.history.map(item => {
+      const movieName = item.track.movieTitle || item.track.movie;
+      const displayTitle = movieName ? `🎬 ${movieName} (${item.track.title})` : item.track.title;
+      return `
+        <div class="history-item">
+          <div style="display: flex; align-items: center; gap: 0.6rem;">
+            <img src="${item.track.artworkUrl}" style="width: 38px; height: 38px; border-radius: 6px; object-fit: cover;">
+            <div>
+              <div style="font-weight: 700;">${displayTitle}</div>
+              <div style="font-size: 0.75rem; color: var(--text-muted);">${item.track.artist} (${item.track.year})</div>
+            </div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <button class="icon-btn btn-history-play" data-url="${item.track.previewUrl}" style="width: 32px; height: 32px; font-size: 0.8rem;" title="Réécouter">▶️</button>
+            <span class="history-status">${item.isCorrect ? '✅' : '❌'}</span>
           </div>
         </div>
-        <div style="display: flex; align-items: center; gap: 0.5rem;">
-          <button class="icon-btn btn-history-play" data-url="${item.track.previewUrl}" style="width: 32px; height: 32px; font-size: 0.8rem;" title="Réécouter">▶️</button>
-          <span class="history-status">${item.isCorrect ? '✅' : '❌'}</span>
-        </div>
-      </div>
-    `).join('');
+      `;
+    }).join('');
 
     listEl.querySelectorAll('.btn-history-play').forEach(btn => {
       btn.addEventListener('click', () => {

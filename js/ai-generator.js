@@ -16,6 +16,12 @@ export function setGeminiApiKey(key) {
   }
 }
 
+export const GEMINI_MODELS = [
+  'gemini-3.6-flash',
+  'gemini-2.5-flash',
+  'gemini-1.5-flash'
+];
+
 // Test rapide de la clé Gemini
 export async function testGeminiApiKey(key) {
   const cleanKey = (key || '').trim();
@@ -24,43 +30,51 @@ export async function testGeminiApiKey(key) {
   }
 
   const testPrompt = 'Retourne uniquement ce JSON strict : {"tracks":[{"title":"Test","artist":"Test"}]}';
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${encodeURIComponent(cleanKey)}`;
+  let lastError = 'Impossible de contacter Google Gemini.';
 
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 6000);
+  for (const model of GEMINI_MODELS) {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(cleanKey)}`;
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 6000);
 
-  try {
-    const response = await fetch(url, {
-      method: 'POST',
-      signal: controller.signal,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: testPrompt }] }],
-        generationConfig: {
-          responseMimeType: 'application/json',
-          maxOutputTokens: 200
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        signal: controller.signal,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: testPrompt }] }],
+          generationConfig: {
+            responseMimeType: 'application/json',
+            maxOutputTokens: 200
+          }
+        })
+      });
+
+      clearTimeout(timeoutId);
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data?.candidates?.[0]?.content?.parts?.[0]?.text) {
+          return { success: true, message: `Connexion à Google Gemini réussie (${model}) ! 🚀` };
         }
-      })
-    });
-
-    clearTimeout(timeoutId);
-
-    if (!response.ok) {
-      const errJson = await response.json().catch(() => null);
-      const errMsg = errJson?.error?.message || `Erreur HTTP ${response.status}`;
-      return { success: false, message: `Clé invalide : ${errMsg}` };
+      } else {
+        const errJson = await response.json().catch(() => null);
+        const errMsg = errJson?.error?.message || `Erreur HTTP ${response.status}`;
+        lastError = `Clé invalide : ${errMsg}`;
+        // Si la clé API elle-même est rejetée (invalide), pas la peine d'essayer les autres modèles
+        if (errMsg.toLowerCase().includes('api key not valid') || errMsg.toLowerCase().includes('api_key_invalid')) {
+          return { success: false, message: lastError };
+        }
+        // Sinon (ex: modèle retiré/indisponible), on tente le modèle suivant
+      }
+    } catch (err) {
+      clearTimeout(timeoutId);
+      lastError = `Échec de connexion : ${err.name === 'AbortError' ? 'Délai d\'attente dépassé' : err.message}`;
     }
-
-    const data = await response.json();
-    if (data?.candidates?.[0]?.content?.parts?.[0]?.text) {
-      return { success: true, message: 'Connexion à Google Gemini réussie ! 🚀' };
-    }
-
-    return { success: false, message: 'Réponse inattendue de Gemini.' };
-  } catch (err) {
-    clearTimeout(timeoutId);
-    return { success: false, message: `Échec de connexion : ${err.name === 'AbortError' ? 'Délai d\'attente dépassé' : err.message}` };
   }
+
+  return { success: false, message: lastError };
 }
 
 // Nettoyage et normalisation d'une liste de pistes
@@ -135,9 +149,7 @@ function parseAiResponse(rawText) {
 
 // Appel direct à Google Gemini REST API
 async function fetchFromGemini(apiKey, prompt) {
-  const models = ['gemini-2.0-flash', 'gemini-1.5-flash'];
-
-  for (const model of models) {
+  for (const model of GEMINI_MODELS) {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 9000);
 
@@ -214,6 +226,7 @@ Génère une sélection de qualité pour le thème : "${themeDescription}".
 Consignes :
 1. "tracks" : Exactement ${count} morceaux cultes, immédiatement identifiables, emblématiques du thème (titre et artiste). Si c'est un animé, film ou série, indique le nom dans "movie".
 2. "decoys" : 20 autres morceaux ou artistes très connus du MÊME univers/genre musical pour servir de fausses réponses crédibles (leurres de QCM).
+3. Qualité sonore : Choisis UNIQUEMENT des morceaux connus dans leur version studio originale culte (jamais de versions live, acoustiques, reprises obscures ou remixes).
 Format strict JSON uniquement, sans aucun texte autour :
 {
   "tracks": [

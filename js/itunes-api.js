@@ -3,6 +3,82 @@ import { generateTracksFromAI, getGeminiApiKey } from './ai-generator.js';
 
 const cache = new Map();
 
+// Dictionnaire des franchises, films d'animation et séries cultes
+const KNOWN_FRANCHISES = [
+  // Disney & Pixar
+  { patterns: [/roi lion/i, /lion king/i], name: 'Le Roi Lion' },
+  { patterns: [/reine des neiges/i, /\bfrozen\b/i], name: 'La Reine des Neiges' },
+  { patterns: [/aladdin/i], name: 'Aladdin' },
+  { patterns: [/petite sir[eè]ne/i, /little mermaid/i], name: 'La Petite Sirène' },
+  { patterns: [/livre de la jungle/i, /jungle book/i], name: 'Le Livre de la Jungle' },
+  { patterns: [/belle et la b[eê]te/i, /beauty and the beast/i], name: 'La Belle et la Bête' },
+  { patterns: [/mulan/i], name: 'Mulan' },
+  { patterns: [/hercule/i, /hercules/i], name: 'Hercule' },
+  { patterns: [/tarzan/i], name: 'Tarzan' },
+  { patterns: [/vaiana/i, /\bmoana\b/i], name: 'Vaiana' },
+  { patterns: [/pocahontas/i], name: 'Pocahontas' },
+  { patterns: [/aristochats/i, /aristocats/i], name: 'Les Aristochats' },
+  { patterns: [/toy story/i], name: 'Toy Story' },
+  { patterns: [/cendrillon/i, /cinderella/i], name: 'Cendrillon' },
+  { patterns: [/pinocchio/i], name: 'Pinocchio' },
+  { patterns: [/blanche[- ]neige/i, /snow white/i], name: 'Blanche-Neige' },
+  { patterns: [/raiponce/i, /tangled/i], name: 'Raiponce' },
+  { patterns: [/encanto/i], name: 'Encanto' },
+  { patterns: [/\bcoco\b/i], name: 'Coco' },
+  { patterns: [/zootopie/i, /zootopia/i], name: 'Zootopie' },
+  { patterns: [/princesse et la grenouille/i, /princess and the frog/i], name: 'La Princesse et la Grenouille' },
+  { patterns: [/ratatouille/i], name: 'Ratatouille' },
+  { patterns: [/monstres [&e]t? cie/i, /monsters inc/i], name: 'Monstres & Cie' },
+  { patterns: [/monde de nemo/i, /finding nemo/i], name: 'Le Monde de Nemo' },
+  { patterns: [/indestructibles/i, /incredibles/i], name: 'Les Indestructibles' },
+  { patterns: [/bossu de notre[- ]dame/i, /hunchback of notre dame/i], name: 'Le Bossu de Notre-Dame' },
+  { patterns: [/peter pan/i], name: 'Peter Pan' },
+  { patterns: [/bambi/i], name: 'Bambi' },
+  { patterns: [/dumbo/i], name: 'Dumbo' },
+  { patterns: [/la haut/i, /là-haut/i], name: 'Là-Haut' },
+  { patterns: [/\bcars\b/i], name: 'Cars' },
+
+  // Dessins animés cultes & Séries jeunesse
+  { patterns: [/pok[eé]mon/i], name: 'Pokémon' },
+  { patterns: [/myst[eé]rieuses cit[eé]s d[' ]or/i], name: 'Les Mystérieuses Cités d\'Or' },
+  { patterns: [/inspecteur gadget/i], name: 'Inspecteur Gadget' },
+  { patterns: [/capitaine flam/i], name: 'Capitaine Flam' },
+  { patterns: [/goldorak/i], name: 'Goldorak' },
+  { patterns: [/olive et tom/i, /captain tsubasa/i], name: 'Olive et Tom' },
+  { patterns: [/tortues ninja/i, /ninja turtles/i], name: 'Les Tortues Ninja' },
+  { patterns: [/dragon ball/i], name: 'Dragon Ball' },
+  { patterns: [/naruto/i], name: 'Naruto' },
+  { patterns: [/one piece/i], name: 'One Piece' },
+  { patterns: [/attaque des titans/i, /shingeki/i, /\bsnk\b/i], name: 'L\'Attaque des Titans' },
+  { patterns: [/chevaliers du zodiaque/i, /saint seiya/i], name: 'Les Chevaliers du Zodiaque' },
+  { patterns: [/albator/i], name: 'Albator' },
+  { patterns: [/sailor moon/i], name: 'Sailor Moon' },
+
+  // Cinéma & Séries cultes
+  { patterns: [/star wars/i, /guerre des [eé]toiles/i], name: 'Star Wars' },
+  { patterns: [/pirates des cara[iï]bes/i, /pirates of the caribbean/i], name: 'Pirates des Caraïbes' },
+  { patterns: [/harry potter/i], name: 'Harry Potter' },
+  { patterns: [/game of thrones/i, /tr[oô]ne de fer/i], name: 'Game of Thrones' },
+  { patterns: [/seigneur des anneaux/i, /lord of the rings/i], name: 'Le Seigneur des Anneaux' },
+  { patterns: [/gladiator/i], name: 'Gladiator' },
+  { patterns: [/interstellar/i], name: 'Interstellar' },
+  { patterns: [/jurassic park/i], name: 'Jurassic Park' },
+  { patterns: [/james bond/i, /\b007\b/i, /skyfall/i], name: 'James Bond' },
+  { patterns: [/avengers/i, /marvel/i], name: 'Avengers' },
+  { patterns: [/titanic/i], name: 'Titanic' },
+  { patterns: [/rocky\b/i], name: 'Rocky' },
+  { patterns: [/top gun/i], name: 'Top Gun' },
+  { patterns: [/pulp fiction/i], name: 'Pulp Fiction' },
+  { patterns: [/mission impossible/i], name: 'Mission Impossible' },
+  { patterns: [/panth[eè]re rose/i, /pink panther/i], name: 'La Panthère Rose' },
+  { patterns: [/terminator/i], name: 'Terminator' },
+  { patterns: [/indiana jones/i], name: 'Indiana Jones' },
+  { patterns: [/retour vers le futur/i, /back to the future/i], name: 'Retour vers le Futur' },
+  { patterns: [/sos fant[oô]mes/i, /ghostbusters/i], name: 'SOS Fantômes' },
+  { patterns: [/le bon la brute et le truand/i, /good the bad and the ugly/i], name: 'Le Bon, la Brute et le Truand' },
+  { patterns: [/requiem for a dream/i], name: 'Requiem for a Dream' }
+];
+
 // Nettoyage des titres (retirer les mentions parasites, génériques de film et rééditions)
 export function cleanTitle(rawTitle) {
   if (!rawTitle) return '';
@@ -14,8 +90,17 @@ export function cleanTitle(rawTitle) {
 }
 
 // Extraction du nom de film, série ou animé
-export function extractMovieName(rawTitle, collectionName) {
-  // 1. Chercher dans les parenthèses ou guillemets du titre
+export function extractMovieName(rawTitle, collectionName, queryText = null, movieHint = null) {
+  const combined = `${rawTitle || ''} ${collectionName || ''} ${queryText || ''} ${movieHint || ''}`;
+
+  // 1. Chercher dans les franchises et films cultes connus
+  for (const franchise of KNOWN_FRANCHISES) {
+    if (franchise.patterns.some(regex => regex.test(combined))) {
+      return franchise.name;
+    }
+  }
+
+  // 2. Chercher dans les parenthèses ou guillemets du titre
   if (rawTitle) {
     const fromMatch = rawTitle.match(/(?:from|de|du film)\s+["'«]([^"'»]+)["'»]/i);
     if (fromMatch && fromMatch[1]) {
@@ -27,7 +112,7 @@ export function extractMovieName(rawTitle, collectionName) {
     }
   }
 
-  // 2. Chercher dans le nom de l'album / collection
+  // 3. Chercher dans le nom de l'album / collection
   if (collectionName) {
     const ostMatch = collectionName.match(/(.+?)\s*(?:\(original soundtrack|\(b\.o\.|\(soundtrack|\(bande originale|original score|ost\))/i);
     if (ostMatch && ostMatch[1]) {
@@ -38,7 +123,7 @@ export function extractMovieName(rawTitle, collectionName) {
     }
   }
 
-  return null;
+  return movieHint || null;
 }
 
 // Fonction de mélange de tableau (Fisher-Yates)
@@ -98,7 +183,57 @@ export function getYear(releaseDate) {
   return releaseDate.substring(0, 4);
 }
 
-// Recherche d'un titre ou artiste
+// Évaluation de la qualité d'une piste (priorité absolue aux versions studio originales cultes)
+export function getTrackQualityScore(item, query = '') {
+  const q = (query || '').toLowerCase();
+  const title = (item.trackName || '').toLowerCase();
+  const album = (item.collectionName || '').toLowerCase();
+  const artist = (item.artistName || '').toLowerCase();
+  const combined = `${title} ${album} ${artist}`;
+
+  // Détection des versions indésirables pour un blind test (sauf si expressément demandé)
+  const isLive = !q.includes('live') && !q.includes('concert') &&
+    /\b(live|en public|en concert|au z[eé]nith|au bataclan|[aà] l[' ]olympia|live at|live from|in concert|tour \d{4}|live recording|direct live)\b/i.test(combined);
+
+  const isAcoustic = !q.includes('acoustic') && !q.includes('acoustique') && !q.includes('unplugged') &&
+    /\b(acoustic|acoustique|unplugged|piano version|acoustic version|version acoustique|guitare voix|piano solo)\b/i.test(combined);
+
+  const isRemix = !q.includes('remix') && !q.includes('mix') &&
+    /\b(remix|remixed|club mix|extended mix|dub mix|dance mix|mashup|rework|bootleg)\b/i.test(combined);
+
+  const isKaraokeOrTribute = !q.includes('karaoke') && !q.includes('tribute') &&
+    /\b(karaoke|karaok[eé]|instrumental|tribute|cover band|backing track|made famous by|in the style of|piano project|hit crew|all stars|orchestral tribute|sing king)\b/i.test(combined);
+
+  const isDemo = !q.includes('demo') &&
+    /\b(demo|d[eé]mo|rehearsal|session acoustique|work tape|rough mix)\b/i.test(combined);
+
+  if (isKaraokeOrTribute) return -100;
+  if (isLive) return -80;
+  if (isAcoustic) return -60;
+  if (isRemix) return -50;
+  if (isDemo) return -40;
+
+  let score = 100;
+
+  // Bonus pour un album studio original plutôt qu'une compilation
+  if (item.collectionName && !/best of|compilation|greatest hits|anthology|intégrale/i.test(item.collectionName)) {
+    score += 15;
+  }
+
+  // Bonus si le titre est net, sans parenthèse parasite
+  if (!/\(.*\)|\[.*\]/.test(item.trackName)) {
+    score += 25;
+  }
+
+  // Les versions remasterisées studio sont appréciées pour leur dynamique
+  if (/\b(remaster|remastered)\b/i.test(item.trackName)) {
+    score += 10;
+  }
+
+  return score;
+}
+
+// Recherche d'un titre ou d'un artiste avec priorisation des versions studio
 export async function searchTrack(query, country = 'FR', movieHint = null) {
   const cacheKey = `${country}:${query}`;
   if (cache.has(cacheKey)) {
@@ -106,18 +241,36 @@ export async function searchTrack(query, country = 'FR', movieHint = null) {
   }
 
   const encodedQuery = encodeURIComponent(query);
-  const url = `https://itunes.apple.com/search?term=${encodedQuery}&country=${country}&entity=song&limit=12`;
+  // On récupère jusqu'à 25 résultats pour s'assurer d'obtenir la version studio originale
+  const url = `https://itunes.apple.com/search?term=${encodedQuery}&country=${country}&entity=song&limit=25`;
 
   try {
     const response = await fetch(url);
     if (!response.ok) return [];
     const data = await response.json();
 
-    const validTracks = (data.results || [])
-      .filter(item => item.previewUrl && item.trackName && item.artistName)
+    const rawTracks = (data.results || [])
+      .filter(item => item.previewUrl && item.trackName && item.artistName);
+
+    // Calcul du score studio pour chaque piste
+    const scoredTracks = rawTracks.map(item => ({
+      item,
+      score: getTrackQualityScore(item, query)
+    }));
+
+    // Tri pour placer les versions studio originales en premier
+    scoredTracks.sort((a, b) => b.score - a.score);
+
+    // Si des versions studio propres (score >= 50) existent, on rejette catégoriquement tous les lives/acoustiques/remixes
+    const hasCleanStudio = scoredTracks.some(t => t.score >= 50);
+    const chosenItems = hasCleanStudio
+      ? scoredTracks.filter(t => t.score >= 50).map(t => t.item)
+      : scoredTracks.filter(t => t.score > -100).map(t => t.item);
+
+    const validTracks = chosenItems
       .map(item => {
         const cleanedTitle = cleanTitle(item.trackName);
-        const extractedMovie = extractMovieName(item.trackName, item.collectionName) || movieHint;
+        const extractedMovie = extractMovieName(item.trackName, item.collectionName, query, movieHint);
         const artworkHd = (item.artworkUrl100 || '').replace('100x100bb', '600x600bb');
         return {
           id: item.trackId,
@@ -224,8 +377,38 @@ export function getSmartThemeQueries(theme) {
   return [...new Set(queries)];
 }
 
+// Vivier de secours spécialisé pour les films, Disney et séries (Leurres avec nom de film)
+const UNIVERSAL_MOVIE_DECOYS = [
+  { title: 'L\'Histoire de la vie', artist: 'Le Roi Lion', movieTitle: 'Le Roi Lion' },
+  { title: 'Ce rêve bleu', artist: 'Aladdin', movieTitle: 'Aladdin' },
+  { title: 'Libérée, délivrée', artist: 'La Reine des Neiges', movieTitle: 'La Reine des Neiges' },
+  { title: 'Sous l\'océan', artist: 'La Petite Sirène', movieTitle: 'La Petite Sirène' },
+  { title: 'Il en faut peu pour être heureux', artist: 'Le Livre de la Jungle', movieTitle: 'Le Livre de la Jungle' },
+  { title: 'Comme un homme', artist: 'Mulan', movieTitle: 'Mulan' },
+  { title: 'De zéro en héros', artist: 'Hercule', movieTitle: 'Hercule' },
+  { title: 'Entre deux mondes', artist: 'Tarzan', movieTitle: 'Tarzan' },
+  { title: 'Le Bleu lumière', artist: 'Vaiana', movieTitle: 'Vaiana' },
+  { title: 'Tout le monde veut devenir un cat', artist: 'Les Aristochats', movieTitle: 'Les Aristochats' },
+  { title: 'Je suis ton ami', artist: 'Toy Story', movieTitle: 'Toy Story' },
+  { title: 'Ne parlons pas de Bruno', artist: 'Encanto', movieTitle: 'Encanto' },
+  { title: 'Où est la vraie vie ?', artist: 'Raiponce', movieTitle: 'Raiponce' },
+  { title: 'Ne m\'oublie pas', artist: 'Coco', movieTitle: 'Coco' },
+  { title: 'Histoire éternelle', artist: 'La Belle et la Bête', movieTitle: 'La Belle et la Bête' },
+  { title: 'Star Wars Theme', artist: 'John Williams', movieTitle: 'Star Wars' },
+  { title: 'He\'s a Pirate', artist: 'Hans Zimmer', movieTitle: 'Pirates des Caraïbes' },
+  { title: 'Hedwig\'s Theme', artist: 'John Williams', movieTitle: 'Harry Potter' },
+  { title: 'Game of Thrones Theme', artist: 'Ramin Djawadi', movieTitle: 'Game of Thrones' },
+  { title: 'Now We Are Free', artist: 'Hans Zimmer', movieTitle: 'Gladiator' },
+  { title: 'Concerning Hobbits', artist: 'Howard Shore', movieTitle: 'Le Seigneur des Anneaux' },
+  { title: 'My Heart Will Go On', artist: 'Céline Dion', movieTitle: 'Titanic' },
+  { title: 'Eye of the Tiger', artist: 'Survivor', movieTitle: 'Rocky' },
+  { title: 'Jurassic Park Theme', artist: 'John Williams', movieTitle: 'Jurassic Park' },
+  { title: 'James Bond Theme', artist: 'Monty Norman', movieTitle: 'James Bond' },
+  { title: 'Ghostbusters', artist: 'Ray Parker Jr.', movieTitle: 'SOS Fantômes' },
+  { title: 'Danger Zone', artist: 'Kenny Loggins', movieTitle: 'Top Gun' }
+];
+
 // Vaste vivier universel de secours (60 classiques cultes multi-genres)
-// Utilisé uniquement si le vivier de leurres s'épuise complètement sur de très longues parties
 const EXTENDED_UNIVERSAL_DECOYS = [
   { title: 'One More Time', artist: 'Daft Punk' },
   { title: 'Bohemian Rhapsody', artist: 'Queen' },
@@ -320,7 +503,7 @@ export async function preparePlaylist(category, trackCount = 10, onProgress = nu
   // 1. APPEL IA (Google Gemini si configuré, sinon service public sans clé)
   if (shouldInvokeAI) {
     if (onProgress) {
-      const aiProviderName = hasGeminiKey ? "Google Gemini 2.0" : "L'IA musicale";
+      const aiProviderName = hasGeminiKey ? "Google Gemini" : "L'IA musicale";
       onProgress(20, `${aiProviderName} compose votre sélection sur-mesure...`);
     }
 
@@ -393,21 +576,28 @@ export async function preparePlaylist(category, trackCount = 10, onProgress = nu
   const categoryDecoys = category.decoys || [];
   const globalDecoys = [
     // Priorité 1 : les leurres thématiques ciblés générés par l'IA
-    ...aiDecoys.map(d => ({ title: d.title, artist: d.artist, movieTitle: d.movie || null })),
+    ...aiDecoys.map(d => ({ title: d.title, artist: d.artist, movieTitle: d.movie || d.movieTitle || null })),
     // Priorité 2 : les alternatives réelles issues des recherches iTunes
     ...allFetchedForDecoys,
     // Priorité 3 : les morceaux alternatifs du pool
     ...pool,
     // Priorité 4 : les leurres prédéfinis de la catégorie
-    ...categoryDecoys.map(d => ({ title: d.title, artist: d.artist, movieTitle: d.movie || null }))
+    ...categoryDecoys.map(d => ({ title: d.title, artist: d.artist, movieTitle: d.movie || d.movieTitle || null }))
   ];
 
   // Ensemble pour mémoriser les leurres déjà utilisés dans la partie (afin d'éviter les répétitions)
   const sessionUsedDecoyKeys = new Set(finalTracks.map(t => canonicalKey(t.title)));
 
+  // Détermine si cette partie est axée sur des films / dessins animés / séries
+  const isMovieTheme = category.id === 'disney_dessins_animes' ||
+                       category.id === 'cinema_series' ||
+                       finalTracks.filter(t => !!t.movieTitle).length >= (finalTracks.length / 2);
+
   const preparedTracks = finalTracks.map((track) => {
     const chosenDecoys = [];
     const shuffledCandidates = shuffleArray(globalDecoys);
+    const trackMovie = track.movieTitle || track.movie || null;
+    const treatAsMovie = isMovieTheme || !!trackMovie;
 
     // 1ère passe : chercher des candidats non encore utilisés dans toute la partie
     for (const cand of shuffledCandidates) {
@@ -423,11 +613,23 @@ export async function preparePlaylist(category, trackCount = 10, onProgress = nu
         continue;
       }
 
+      const candMovie = cand.movieTitle || cand.movie || null;
+
+      // Si le morceau est un film/dessin animé :
+      if (treatAsMovie) {
+        // En mode film, le leurre DOIT avoir un film/dessin animé associé
+        if (!candMovie) continue;
+        // Le film du leurre ne doit PAS être le même film que la bonne réponse !
+        if (trackMovie && canonicalKey(candMovie) === canonicalKey(trackMovie)) continue;
+        // Ne pas proposer deux fois le même film dans les 4 choix !
+        if (chosenDecoys.some(d => canonicalKey(d.movieTitle || d.movie) === canonicalKey(candMovie))) continue;
+      }
+
       sessionUsedDecoyKeys.add(candKey);
       chosenDecoys.push({
         title: cand.title,
         artist: cand.artist,
-        movieTitle: cand.movieTitle || cand.movie || null
+        movieTitle: candMovie
       });
 
       if (chosenDecoys.length === 3) break;
@@ -446,26 +648,50 @@ export async function preparePlaylist(category, trackCount = 10, onProgress = nu
         if (!candKey || localUsedKeys.has(candKey)) continue;
         if (areTitlesEquivalent(cand.title, track.title)) continue;
 
+        const candMovie = cand.movieTitle || cand.movie || null;
+
+        if (treatAsMovie) {
+          if (!candMovie) continue;
+          if (trackMovie && canonicalKey(candMovie) === canonicalKey(trackMovie)) continue;
+          if (chosenDecoys.some(d => canonicalKey(d.movieTitle || d.movie) === canonicalKey(candMovie))) continue;
+        }
+
         localUsedKeys.add(candKey);
         chosenDecoys.push({
           title: cand.title,
           artist: cand.artist,
-          movieTitle: cand.movieTitle || cand.movie || null
+          movieTitle: candMovie
         });
 
         if (chosenDecoys.length === 3) break;
       }
     }
 
-    // 3ème passe : si le vivier est encore insuffisant, puiser dans les 60 classiques universels variés
+    // 3ème passe : si le vivier est encore insuffisant, puiser dans les viviers de secours
     if (chosenDecoys.length < 3) {
-      for (const u of shuffleArray(EXTENDED_UNIVERSAL_DECOYS)) {
+      const backupList = treatAsMovie ? UNIVERSAL_MOVIE_DECOYS : EXTENDED_UNIVERSAL_DECOYS;
+
+      for (const u of shuffleArray(backupList)) {
         const uKey = canonicalKey(u.title);
-        if (!sessionUsedDecoyKeys.has(uKey) && !areTitlesEquivalent(u.title, track.title)) {
-          sessionUsedDecoyKeys.add(uKey);
-          chosenDecoys.push(u);
-          if (chosenDecoys.length === 3) break;
+        const uMovie = u.movieTitle || u.movie || null;
+
+        if (areTitlesEquivalent(u.title, track.title)) continue;
+        if (sessionUsedDecoyKeys.has(uKey)) continue;
+
+        if (treatAsMovie) {
+          if (!uMovie) continue;
+          if (trackMovie && canonicalKey(uMovie) === canonicalKey(trackMovie)) continue;
+          if (chosenDecoys.some(d => canonicalKey(d.movieTitle || d.movie) === canonicalKey(uMovie))) continue;
         }
+
+        sessionUsedDecoyKeys.add(uKey);
+        chosenDecoys.push({
+          title: u.title,
+          artist: u.artist,
+          movieTitle: uMovie
+        });
+
+        if (chosenDecoys.length === 3) break;
       }
     }
 

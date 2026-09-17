@@ -1,4 +1,4 @@
-﻿# 🎵 BlindTest Party - Application Web & PWA
+# 🎵 BlindTest Party - Application Web & PWA
 
 Une application de **Blind Test musical moderne, fluide et festive**, conçue pour fonctionner aussi bien en solo qu'entre amis lors de soirées, directement depuis un navigateur mobile, tablette ou PC, sans installation complexe ni frais d'hébergement.
 
@@ -74,13 +74,12 @@ L'application est une **Progressive Web App (PWA)** certifiée. Elle s'installe 
 
 ## 🤖 Générateur IA & Thèmes Sur-Mesure (Google Gemini)
 
-L'application intègre un créateur de playlists par Intelligence Artificielle avec **Google Gemini 2.0** :
+L'application intègre un créateur de playlists par Intelligence Artificielle avec **Google Gemini** :
 - **100% Sécurisé pour GitHub Pages :** Aucune clé API n'est inscrite en dur dans le code source ou le dépôt Git.
 - **Configuration en 30 secondes :** Cliquez sur l'icône **🤖** dans l'en-tête du jeu pour coller votre clé gratuite obtenue sur [Google AI Studio](https://aistudio.google.com).
 - **Stockage local :** La clé est conservée uniquement sur votre navigateur (`localStorage`).
-- **Rapidité extrême :** Génération de 10 à 20 morceaux en **moins d'une seconde** (< 1s) !
-- **Option multi-joueurs (Proxy Worker) :** Si vous souhaitez offrir l'IA à vos amis sans qu'ils aient à entrer de clé, un template Cloudflare Worker gratuit de 15 lignes est disponible dans [`tools/cloudflare-worker.js`](tools/cloudflare-worker.js).
-- **Mode sans clé & Fallback intelligent :** Si aucune clé n'est renseignée, le jeu recherche directement dans iTunes les mots-clés de votre thème sans jamais vous faire attendre inutilement.
+- **Rapidité extrême :** Génération de 10 à 20 morceaux en **moins d'une seconde** (< 1s) grâce aux modèles Gemini Flash !
+- **Mode sans clé & Fallback intelligent :** Si aucune clé n'est renseignée ou en cas de quota épuisé, le jeu utilise un service IA public ou recherche directement dans iTunes les mots-clés de votre thème sans blocage.
 
 ---
 ## 🎲 Fonctionnalité Spéciale : Départ Aléatoire

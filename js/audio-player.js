@@ -61,21 +61,38 @@ export class AudioEngine {
       this.audio.muted = this.isMuted;
       this.audio.volume = 1.0;
 
+      // Détermination de l'offset cible
+      // Extraits iTunes de 30s : on démarre entre 7s et 16s pour tomber directement au milieu/refrain !
+      const targetOffset = (mode === 'random')
+        ? (Math.floor(Math.random() * 10) + 7) // 7s à 16s
+        : 0;
+
+      this.randomOffset = targetOffset;
+
+      const enforceOffset = () => {
+        if (targetOffset > 0 && Math.abs(this.audio.currentTime - targetOffset) > 1.5) {
+          try {
+            this.audio.currentTime = targetOffset;
+          } catch (err) {
+            console.warn('Erreur réglage currentTime audio:', err);
+          }
+        }
+      };
+
+      // Événement 'playing' : le flux audio a réellement commencé à jouer
+      const onPlaying = () => {
+        this.audio.removeEventListener('playing', onPlaying);
+        enforceOffset();
+        setTimeout(enforceOffset, 120);
+      };
+      this.audio.addEventListener('playing', onPlaying);
+
       const onCanPlay = () => {
         this.audio.removeEventListener('canplay', onCanPlay);
 
-        // Détermination du point de départ
-        if (mode === 'random') {
-          // Les extraits font 30s. On démarre entre 5s et 15s pour avoir un passage dynamique
-          const offset = Math.floor(Math.random() * 10) + 5;
-          this.randomOffset = offset;
-          try {
-            this.audio.currentTime = offset;
-          } catch (e) {
-            console.warn('Impossible de régler currentTime immédiatement:', e);
-          }
+        if (targetOffset > 0) {
+          enforceOffset();
         } else {
-          this.randomOffset = 0;
           this.audio.currentTime = 0;
         }
 
@@ -84,6 +101,7 @@ export class AudioEngine {
           playPromise
             .then(() => {
               this.isPlaying = true;
+              enforceOffset();
               resolve();
             })
             .catch((err) => {
