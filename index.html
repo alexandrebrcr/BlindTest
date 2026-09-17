@@ -35,7 +35,7 @@
       </div>
       <div class="header-actions">
         <button class="icon-btn" id="btn-sound-toggle" title="Activer / Désactiver les effets sonores">🔊</button>
-        <button class="icon-btn" id="btn-ai-settings" title="Réglages IA (Google Gemini)">🤖</button>
+        <button class="icon-btn" id="btn-ai-settings" title="Réglages IA (Google Gemini)" onclick="const m = document.getElementById('modal-ai-settings'); if(m){ m.style.display='flex'; m.classList.add('active'); }">🤖</button>
         <button class="icon-btn" id="btn-info-modal" title="Règles et installation">ℹ️</button>
       </div>
     </header>
@@ -536,13 +536,13 @@
   </div>
 
   <!-- Modal Réglages IA (Google Gemini) -->
-  <div class="buzzer-modal-overlay" id="modal-ai-settings">
+  <div class="buzzer-modal-overlay" id="modal-ai-settings" style="display: none; position: fixed; inset: 0; z-index: 99999; background: rgba(5, 6, 15, 0.92); backdrop-filter: blur(18px); align-items: center; justify-content: center; padding: 1rem; overflow-y: auto;" onclick="if(event.target === this){ this.style.display='none'; this.classList.remove('active'); }">
     <div class="glass-card" style="max-width: 480px; text-align: left; width: 100%;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
         <h3 style="font-family: var(--font-display); font-size: 1.3rem; display: flex; align-items: center; gap: 0.5rem;">
           🤖 Réglages IA (Google Gemini)
         </h3>
-        <button class="icon-btn" id="btn-close-ai-modal" style="width: 32px; height: 32px; font-size: 0.9rem;" title="Fermer">✕</button>
+        <button class="icon-btn" id="btn-close-ai-modal" style="width: 32px; height: 32px; font-size: 0.9rem;" title="Fermer" onclick="const m = document.getElementById('modal-ai-settings'); if(m){ m.style.display='none'; m.classList.remove('active'); }">✕</button>
       </div>
 
       <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem; line-height: 1.4;">
@@ -587,7 +587,7 @@
         </div>
       </details>
 
-      <button class="btn-primary" id="btn-save-ai-settings">Enregistrer les réglages ✅</button>
+      <button class="btn-primary" id="btn-save-ai-settings" onclick="const m = document.getElementById('modal-ai-settings'); if(m){ m.style.display='none'; m.classList.remove('active'); }">Enregistrer les réglages ✅</button>
     </div>
   </div>
 
