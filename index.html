@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>BlindTest Party - Le jeu de blind test musical ultime</title>
+  <meta name="description" content="Blind Test musical gratuit pour soirées et solo. Tubes des années 80, 90, 2000, Rap FR, Pop, Rock, Disney et Cinéma avec extraits instantanés.">
+  
+  <!-- PWA & Mobile Web App Meta -->
+  <link rel="manifest" href="./manifest.webmanifest">
+  <meta name="theme-color" content="#0b0c16">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="BlindTest">
+  <link rel="apple-touch-icon" href="./assets/icons/icon.svg">
+  <link rel="icon" type="image/svg+xml" href="./assets/icons/icon.svg">
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="./css/style.css">
+  <link rel="stylesheet" href="./css/buzzer.css">
+</head>
+<body>
+
+  <div class="app-container" id="app">
+
+    <!-- En-tête Global -->
+    <header class="app-header">
+      <div class="brand-logo" id="btn-brand-home" title="Retour à l'accueil">
+        <img src="./assets/icons/icon.svg" alt="Logo BlindTest" class="logo-icon">
+        <h1 class="brand-title">BlindTest<span style="color:#00f2fe">.</span></h1>
+      </div>
+      <div class="header-actions">
+        <button class="icon-btn" id="btn-sound-toggle" title="Activer / Désactiver les effets sonores">🔊</button>
+        <button class="icon-btn" id="btn-info-modal" title="Règles et installation">ℹ️</button>
+      </div>
+    </header>
+
+    <!-- ====================================================================
+         ÉCRAN 1 : ACCUEIL & CONFIGURATION DE LA PARTIE
+         ==================================================================== -->
+    <main class="screen active" id="screen-home">
+      <div class="hero-banner">
+        <h2 class="hero-title">Devinez la musique en <span>quelques secondes</span></h2>
+        <p class="hero-subtitle">En solo ou entre amis, testez votre culture musicale !</p>
+      </div>
+
+      <!-- Bandeau PWA pour mobile -->
+      <div class="pwa-banner" id="pwa-install-banner">
+        <div class="pwa-banner-text">
+          📲 <strong>Installez l'app :</strong> Sur iPhone, faites <em>Partager &gt; Sur l'écran d'accueil</em> pour jouer en plein écran !
+        </div>
+      </div>
+
+      <!-- Sélection du Mode de Jeu -->
+      <h3 class="section-title">🎮 1. Choisissez votre mode</h3>
+      <div class="modes-grid">
+        <div class="mode-card selected" data-mode="qcm" id="mode-opt-qcm">
+          <div class="mode-badge">🎯</div>
+          <div class="mode-title">Solo QCM</div>
+          <div class="mode-desc">4 choix rapides, idéal sur mobile pour battre son record.</div>
+        </div>
+
+        <div class="mode-card" data-mode="text" id="mode-opt-text">
+          <div class="mode-badge">✍️</div>
+          <div class="mode-title">Solo Saisie</div>
+          <div class="mode-desc">Tapez le nom de l'artiste ou du titre (tolérant aux fautes).</div>
+        </div>
+
+        <div class="mode-card" data-mode="buzzer" id="mode-opt-buzzer">
+          <div class="mode-badge">🚨</div>
+          <div class="mode-title">Soirée Buzzer</div>
+          <div class="mode-desc">2 à 4 joueurs sur le même écran, le plus rapide buzze !</div>
+        </div>
+
+        <div class="mode-card" data-mode="host" id="mode-opt-host">
+          <div class="mode-badge">👑</div>
+          <div class="mode-title">Maître du Jeu</div>
+          <div class="mode-desc">Reliez à une enceinte TV, animez et comptez les points.</div>
+        </div>
+      </div>
+
+      <!-- Sélection de la Catégorie -->
+      <h3 class="section-title">🎵 2. Choisissez la catégorie</h3>
+      <div class="categories-grid" id="categories-container">
+        <!-- Rempli dynamiquement en JS -->
+      </div>
+
+      <!-- Paramètres de Partie -->
+      <h3 class="section-title">⚙️ 3. Réglages de jeu</h3>
+      <div class="settings-box">
+        <!-- Nombre de Morceaux -->
+        <div class="setting-row">
+          <span class="setting-label">🔢 Nombre de morceaux</span>
+          <div class="setting-options" id="opt-track-count">
+            <button class="pill-option" data-value="5">5</button>
+            <button class="pill-option active" data-value="10">10</button>
+            <button class="pill-option" data-value="15">15</button>
+            <button class="pill-option" data-value="20">20</button>
+          </div>
+        </div>
+
+        <!-- Point de départ du morceau (Demande explicite de l'utilisateur) -->
+        <div class="setting-row">
+          <span class="setting-label">🎲 Départ audio</span>
+          <div class="setting-options" id="opt-start-mode">
+            <button class="pill-option active" data-value="start" title="Démarre au début de l'extrait">Classique (0s)</button>
+            <button class="pill-option" data-value="random" title="Démarre au hasard au milieu pour plus de défi !">Aléatoire 🎲</button>
+          </div>
+        </div>
+
+        <!-- Nombre de Joueurs (Visible seulement si mode Buzzer) -->
+        <div class="setting-row" id="row-player-count" style="display: none;">
+          <span class="setting-label">👥 Nombre de joueurs</span>
+          <div class="setting-options" id="opt-player-count">
+            <button class="pill-option active" data-value="2">2 Joueurs</button>
+            <button class="pill-option" data-value="3">3 Joueurs</button>
+            <button class="pill-option" data-value="4">4 Joueurs</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bouton de lancement -->
+      <button class="btn-primary" id="btn-start-game">
+        <span>LANCER LA PARTIE</span> 🎵
+      </button>
+    </main>
+
+    <!-- ====================================================================
+         ÉCRAN 2 : CHARGEMENT DE LA PLAYLIST
+         ==================================================================== -->
+    <section class="screen loading-screen" id="screen-loading">
+      <div class="spinner-pulse">🎶</div>
+      <h2 style="font-family: var(--font-display); font-size: 1.5rem;" id="loading-category-name">Préparation des morceaux...</h2>
+      <p style="color: var(--text-muted); font-size: 0.9rem;" id="loading-subtext">Chargement des extraits audio haute qualité</p>
+      
+      <div class="loading-progress-bar">
+        <div class="loading-progress-fill" id="loading-progress-fill"></div>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         ÉCRAN 3 : JEU SOLO (QCM & SAISIE LIBRE)
+         ==================================================================== -->
+    <section class="screen" id="screen-solo">
+      <!-- Barre d'état haute -->
+      <div class="game-top-bar">
+        <span class="round-pill" id="solo-round-display">Manche 1 / 10</span>
+        <div class="score-streak-bar">
+          <span class="streak-badge" id="solo-streak-badge" style="display: none;">🔥 x1.5</span>
+          <span class="score-display" id="solo-score-display">0 pts</span>
+        </div>
+      </div>
+
+      <!-- Barre de chrono -->
+      <div class="timer-bar-wrapper">
+        <div class="timer-bar-fill" id="solo-timer-fill"></div>
+      </div>
+
+      <!-- Disque Vinyle avec pochette mystère -->
+      <div class="vinyl-container">
+        <div class="vinyl-disc spinning" id="solo-vinyl-disc">
+          <div class="vinyl-grooves"></div>
+          <img src="" alt="Pochette d'album" class="album-cover" id="solo-album-cover">
+          <div class="mystery-center-icon" id="solo-mystery-icon">❓</div>
+        </div>
+      </div>
+
+      <!-- Révélation d'informations après réponse -->
+      <div class="track-reveal-card" id="solo-reveal-box">
+        <div class="track-reveal-title" id="solo-reveal-title">Écoutez bien...</div>
+        <div class="track-reveal-artist" id="solo-reveal-artist">Quel est ce morceau ?</div>
+        <div class="track-reveal-meta" id="solo-reveal-meta"></div>
+      </div>
+
+      <!-- Mode QCM (4 choix) -->
+      <div class="qcm-grid" id="solo-qcm-container">
+        <!-- Boutons d'options injectés ici -->
+      </div>
+
+      <!-- Mode Saisie Libre -->
+      <form class="input-answer-group" id="solo-text-form" style="display: none;">
+        <input type="text" class="input-answer" id="solo-text-input" placeholder="Titre ou Artiste..." autocomplete="off" autocorrect="off">
+        <button type="submit" class="btn-primary" style="width: auto; padding: 0.8rem 1.4rem;">Valider</button>
+      </form>
+
+      <!-- Bouton Morceau suivant ou Passer -->
+      <div style="margin-top: auto; padding-top: 1rem; display: flex; gap: 0.5rem;">
+        <button class="btn-secondary" id="btn-solo-skip">Passer ce morceau ⏩</button>
+        <button class="btn-primary" id="btn-solo-next" style="display: none;">Morceau suivant ➡️</button>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         ÉCRAN 4 : RÉCAPITULATIF / FIN DE PARTIE SOLO
+         ==================================================================== -->
+    <section class="screen gameover-screen" id="screen-gameover">
+      <h2 style="font-family: var(--font-display); font-size: 2rem;">Partie Terminée ! 🎉</h2>
+      
+      <div class="score-circle">
+        <span class="score-big-number" id="gameover-score">0</span>
+        <span class="score-sublabel">Points</span>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-item">
+          <div class="stat-val" id="gameover-accuracy">0%</div>
+          <div class="stat-lbl">Précision</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-val" id="gameover-correct">0/10</div>
+          <div class="stat-lbl">Trouvés</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-val" id="gameover-maxstreak">0</div>
+          <div class="stat-lbl">Série Max 🔥</div>
+        </div>
+      </div>
+
+      <h3 style="font-family: var(--font-display); font-size: 1.1rem; text-align: left; margin-top: 0.5rem;">
+        🎵 Morceaux de la manche
+      </h3>
+      <div class="history-list" id="gameover-history-list">
+        <!-- Rempli avec les morceaux et boutons replay -->
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 0.6rem; margin-top: 1rem;">
+        <button class="btn-primary" id="btn-replay-same">Rejouer cette catégorie 🔄</button>
+        <button class="btn-secondary" id="btn-back-menu">Changer de mode / catégorie 🏠</button>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         ÉCRAN 5 : MAÎTRE DU JEU (SOIRÉES & ENCEINTE BLUETOOTH)
+         ==================================================================== -->
+    <section class="screen" id="screen-host">
+      <div class="game-top-bar">
+        <span class="round-pill" id="host-round-display">Morceau 1 / 10</span>
+        <button class="btn-secondary" id="btn-host-quit" style="width: auto; padding: 0.4rem 0.8rem; font-size: 0.8rem;">Quitter ✕</button>
+      </div>
+
+      <!-- Carte du morceau secret -->
+      <div class="glass-card" style="text-align: center; margin-bottom: 1.25rem;">
+        <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Morceau en cours</div>
+        
+        <div id="host-secret-box" style="margin: 1rem 0;">
+          <div style="font-size: 1.8rem; margin-bottom: 0.3rem;">🤫</div>
+          <div style="font-size: 0.9rem; color: var(--text-muted);">Réponse masquée pour les joueurs</div>
+          <button class="btn-secondary" id="btn-host-reveal-toggle" style="width: auto; margin: 0.8rem auto 0; padding: 0.5rem 1rem;">
+            👁️ Afficher la réponse
+          </button>
+        </div>
+
+        <div id="host-revealed-box" style="display: none; margin: 0.8rem 0;">
+          <img src="" id="host-cover-img" alt="Pochette" style="width: 85px; height: 85px; border-radius: var(--radius-sm); margin-bottom: 0.5rem; object-fit: cover;">
+          <div style="font-family: var(--font-display); font-size: 1.3rem; font-weight: 800;" id="host-track-title">Bohemian Rhapsody</div>
+          <div style="color: var(--primary-cyan); font-weight: 700;" id="host-track-artist">Queen</div>
+          <div style="color: var(--text-muted); font-size: 0.8rem;" id="host-track-year">1975</div>
+        </div>
+
+        <!-- Contrôles Audio Maître du jeu -->
+        <div style="display: flex; justify-content: center; gap: 0.6rem; margin-top: 1rem;">
+          <button class="icon-btn" id="btn-host-rewind" title="Rejouer depuis le début">⏮️</button>
+          <button class="icon-btn" id="btn-host-playpause" style="width: 50px; height: 50px; font-size: 1.4rem;">⏸️</button>
+          <button class="btn-primary" id="btn-host-next" style="width: auto; padding: 0.6rem 1.2rem; font-size: 0.95rem;">
+            Morceau Suivant ⏭️
+          </button>
+        </div>
+      </div>
+
+      <!-- Tableau des Scores des Équipes -->
+      <h3 class="section-title">🏆 Scores des Équipes</h3>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1rem;" id="host-teams-container">
+        <!-- Équipes générées en JS -->
+      </div>
+    </section>
+
+  </div><!-- Fin app-container -->
+
+  <!-- ====================================================================
+       ÉCRAN 6 : PLEIN ÉCRAN BUZZER MULTIJOUEUR (2 À 4 JOUEURS)
+       ==================================================================== -->
+  <div class="buzzer-screen" id="screen-buzzer">
+    <!-- Bouton pour quitter le mode buzzer -->
+    <button class="buzzer-exit-btn" id="btn-buzzer-exit" title="Quitter la partie">✕</button>
+
+    <!-- HUD Central avec info manche et bouton abandonner le tour -->
+    <div class="buzzer-center-hud">
+      <div class="buzzer-hud-card">
+        <div class="hud-round" id="buzzer-hud-round">Manche 1 / 10</div>
+        <div class="hud-mystery-icon">⚡</div>
+        <div style="font-size: 0.8rem; color: var(--text-muted);" id="buzzer-hud-status">Écoutez et buzzez !</div>
+        <button class="hud-action-btn" id="btn-buzzer-nobody">Personne ne sait 🤷‍♂️</button>
+      </div>
+    </div>
+
+    <!-- Grille des Buzzers interactifs -->
+    <div class="buzzers-layout players-2" id="buzzers-container">
+      <!-- Quadrants générés dynamiquement selon le nombre de joueurs -->
+    </div>
+
+    <!-- Overlay quand un joueur a buzzé (compte à rebours 5s) -->
+    <div class="buzzer-modal-overlay" id="buzzer-modal">
+      <div class="buzzer-verdict-card">
+        <div class="buzz-winner-badge" id="buzz-winner-name" style="color: var(--primary-cyan);">Joueur 1 a buzzé !</div>
+        <div style="font-size: 0.9rem; color: var(--text-muted);">Donnez votre réponse à voix haute :</div>
+        <div class="buzz-countdown" id="buzz-modal-countdown">5</div>
+
+        <div class="buzz-verdict-btns">
+          <button class="btn-correct" id="btn-buzz-correct">✅ Bonne (+1)</button>
+          <button class="btn-wrong" id="btn-buzz-wrong">❌ Faux</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal de Révélation après résolution du tour -->
+    <div class="buzzer-reveal-modal" id="buzzer-reveal-modal">
+      <div class="glass-card reveal-card-body">
+        <img src="" id="buzzer-reveal-img" class="reveal-artwork-img" alt="Pochette">
+        <div style="font-family: var(--font-display); font-size: 1.4rem; font-weight: 800;" id="buzzer-reveal-title">Titre</div>
+        <div style="color: var(--primary-cyan); font-weight: 700; margin-bottom: 0.2rem;" id="buzzer-reveal-artist">Artiste</div>
+        <div style="color: var(--text-muted); font-size: 0.8rem; margin-bottom: 1.2rem;" id="buzzer-reveal-meta">Année</div>
+        
+        <div id="buzzer-point-awarded" style="font-weight: 800; margin-bottom: 1rem; color: var(--accent-green);">+1 pt pour Joueur 1 !</div>
+        <button class="btn-primary" id="btn-buzzer-next-round">Morceau Suivant ➡️</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Instructions & PWA -->
+  <div class="buzzer-modal-overlay" id="modal-instructions">
+    <div class="glass-card" style="max-width: 440px; text-align: left;">
+      <h3 style="font-family: var(--font-display); font-size: 1.3rem; margin-bottom: 0.75rem;">
+        📖 Comment jouer ?
+      </h3>
+      <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 0.8rem; line-height: 1.4;">
+        <strong>🎯 Solo QCM :</strong> Répondez le plus vite possible pour accumuler un bonus de rapidité et des multiplicateurs de série !
+      </p>
+      <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 0.8rem; line-height: 1.4;">
+        <strong>🚨 Soirée Buzzer :</strong> Posez le smartphone ou la tablette au centre de la table. Chaque joueur a son coin d'écran. Le premier qui touche gagne 5 secondes pour crier sa réponse !
+      </p>
+      <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 1rem; line-height: 1.4;">
+        <strong>📲 Installer sur iPhone :</strong> Ouvrez ce site dans <em>Safari</em>, appuyez sur le bouton <em>Partager</em> (l'icône avec le carré et la flèche vers le haut), puis sélectionnez <em>"Sur l'écran d'accueil"</em>.
+      </p>
+      <button class="btn-primary" id="btn-close-instructions">J'ai compris ! 👍</button>
+    </div>
+  </div>
+
+  <!-- Script principal ES Module -->
+  <script type="module" src="./js/app.js"></script>
+
+  <!-- Enregistrement Service Worker PWA -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then(reg => console.log('Service Worker PWA actif:', reg.scope))
+          .catch(err => console.warn('Échec enregistrement SW:', err));
+      });
+    }
+  </script>
+</body>
+</html>
