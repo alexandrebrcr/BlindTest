@@ -143,6 +143,60 @@ export function shuffleArray(arr) {
   return copy;
 }
 
+// Générateur musical intelligent pour Thème Libre (100% autonome, 0 clé API nécessaire)
+export function getSmartThemeQueries(theme) {
+  if (!theme || typeof theme !== 'string') return [];
+  const lower = theme.toLowerCase().trim();
+  const queries = [];
+
+  // 1. Thématiques et univers cultes
+  if (lower.includes('manga') || lower.includes('anime') || lower.includes('animé') || lower.includes('japon')) {
+    queries.push('generique dessin anime', 'manga opening', 'naruto opening', 'dragon ball z', 'one piece we are', 'japanimation');
+  } else if (lower.includes('dessin') || lower.includes('enfance') || lower.includes('cartoon')) {
+    queries.push('generique dessin anime', 'les mysterieuses cites dor', 'inspecteur gadget', 'pokemon generique', 'goldorak', 'capitaine flam');
+  } else if (lower.includes('disney')) {
+    queries.push('disney le roi lion', 'disney aladdin', 'disney la reine des neiges', 'disney hercule', 'disney tarzan', 'disney vaiana');
+  } else if (lower.includes('film') || lower.includes('cinema') || lower.includes('cinéma') || lower.includes('serie') || lower.includes('série') || lower.includes('b.o.')) {
+    queries.push('star wars john williams', 'pirates of the caribbean', 'game of thrones theme', 'harry potter hedwig', 'gladiator hans zimmer', 'titanic celine dion');
+  } else if (lower.includes('prenom') || lower.includes('prénom')) {
+    queries.push('aline christophe', 'caroline mc solaar', 'roxanne the police', 'billie jean michael jackson', 'angie rolling stones', 'laura johnny hallyday');
+  } else if (lower.includes('ete') || lower.includes('été') || lower.includes('soleil') || lower.includes('plage')) {
+    queries.push('tube ete', 'hit ete', 'macarena', 'lambada', 'despacito', 'soco bate vira', 'asereje');
+  } else if (lower.includes('amour') || lower.includes('love') || lower.includes('romantique') || lower.includes('rupture')) {
+    queries.push('chanson damour', 'ne me quitte pas', 'my heart will go on', 'all of me john legend', 'je laime a mourir', 'i will always love you');
+  } else if (lower.includes('rock')) {
+    queries.push('rock classics', 'queen', 'ac dc', 'nirvana', 'the beatles', 'rolling stones');
+  } else if (lower.includes('rap')) {
+    queries.push('rap francais', 'jul', 'booba', 'eminem', 'iam le mia', 'suprême ntm');
+  } else if (lower.includes('electro') || lower.includes('techno') || lower.includes('dance')) {
+    queries.push('daft punk one more time', 'david guetta titanium', 'avicii wake me up', 'calvin harris');
+  }
+
+  // 2. Recherche avec le texte exact
+  queries.push(theme);
+  queries.push(`${theme} hit`);
+  queries.push(`${theme} chanson`);
+  queries.push(`${theme} best of`);
+
+  // 3. Découpage en mots-clés
+  const stopWords = new Set(['des', 'les', 'une', 'qui', 'avec', 'dans', 'pour', 'chansons', 'morceaux', 'musique', 'titres', 'tubes']);
+  const words = theme
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-zA-Z0-9\s]/g, ' ')
+    .split(/\s+/)
+    .filter(w => w.length >= 3 && !stopWords.has(w.toLowerCase()));
+
+  if (words.length >= 2) {
+    queries.push(words.join(' '));
+  }
+  for (const w of words) {
+    queries.push(`${w} hit`);
+  }
+
+  return [...new Set(queries)];
+}
+
 // Préparer une sélection de morceaux pour une partie complète
 export async function preparePlaylist(category, trackCount = 10, onProgress = null, customPrompt = null) {
   const pool = [];
@@ -173,18 +227,18 @@ export async function preparePlaylist(category, trackCount = 10, onProgress = nu
   // On lance l'IA si c'est un thème libre OU si l'utilisateur a configuré Gemini/proxy pour les thèmes standards
   const shouldInvokeAI = isCustom || hasGeminiKey || hasProxy;
 
-  // 1. TENTATIVE VIA LE GÉNÉRATEUR IA
-  if (shouldInvokeAI) {
+  // 1. APPEL IA UNIQUEMENT SI CLÉ OU PROXY PRÉSENT
+  if (hasGeminiKey || hasProxy) {
     if (onProgress) {
       const aiProviderName = hasGeminiKey ? "Google Gemini 2.0" : "l'IA";
-      onProgress(15, `${aiProviderName} compose votre sélection sur-mesure...`);
+      onProgress(20, `${aiProviderName} compose votre sélection sur-mesure...`);
     }
 
     const safetyBuffer = trackCount <= 5 ? 2 : 4;
     const aiTracks = await generateTracksFromAI(themeToAsk, trackCount + safetyBuffer);
 
     if (aiTracks && aiTracks.length > 0) {
-      if (onProgress) onProgress(45, "Extraction des extraits audio iTunes...");
+      if (onProgress) onProgress(50, "Extraction des extraits audio iTunes...");
       let processed = 0;
 
       for (const item of aiTracks) {
@@ -201,33 +255,20 @@ export async function preparePlaylist(category, trackCount = 10, onProgress = nu
         }
         processed++;
         if (onProgress) {
-          onProgress(Math.min(90, 45 + Math.round((processed / aiTracks.length) * 45)));
+          onProgress(Math.min(90, 50 + Math.round((processed / aiTracks.length) * 40)));
         }
         if (pool.length >= trackCount + safetyBuffer) break;
       }
     }
   }
 
-  // 2. COMPLÉMENT OU FALLBACK VIA LE VIVIER ALÉATOIRE
+  // 2. MODE SANS CLÉ (100% AUTONOME, INSTANTANÉ) OU COMPLÉMENT
   if (pool.length < trackCount) {
-    if (onProgress) onProgress(60, "Diversification et finalisation de la playlist...");
+    if (onProgress) onProgress(40, isCustom ? "Recherche musicale sur votre thème..." : "Finalisation de la playlist...");
 
-    let queriesToUse = [];
-
-    if (isCustom && customPrompt) {
-      // Fallback intelligent pour Thème Libre : recherche directe des mots-clés de l'utilisateur dans iTunes !
-      queriesToUse = [
-        customPrompt,
-        `${customPrompt} hit`,
-        `${customPrompt} chanson`,
-        `${customPrompt} musique`,
-        `${customPrompt} best of`,
-        `${customPrompt} compilation`,
-        `${customPrompt} remix`
-      ];
-    } else {
-      queriesToUse = category.queries || [];
-    }
+    const queriesToUse = isCustom && customPrompt
+      ? getSmartThemeQueries(customPrompt)
+      : (category.queries || []);
 
     const shuffledQueries = shuffleArray(queriesToUse);
 

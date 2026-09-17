@@ -935,3 +935,42 @@ html, body {
 .ai-key-status.loading {
   color: var(--primary-cyan);
 }
+
+/* Positionnement fixé et centrage garanti pour toutes les modales globales */
+#modal-ai-settings,
+#modal-instructions {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  height: 100dvh !important;
+  z-index: 999999 !important;
+  background: rgba(5, 6, 15, 0.92) !important;
+  backdrop-filter: blur(18px) !important;
+  -webkit-backdrop-filter: blur(18px) !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 1rem !important;
+  overflow-y: auto !important;
+}
+
+#modal-ai-settings:not(.active),
+#modal-instructions:not(.active) {
+  display: none !important;
+}
+
+#modal-ai-settings.active,
+#modal-instructions.active {
+  display: flex !important;
+  animation: zoomModal 0.2s ease-out !important;
+}
+
+#modal-ai-settings .glass-card,
+#modal-instructions .glass-card {
+  max-height: 88vh;
+  overflow-y: auto;
+  margin: auto;
+}

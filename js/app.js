@@ -48,44 +48,17 @@ let deferredPrompt = null;
 
 function initPwaInstall() {
   const installBanner = document.getElementById('pwa-install-banner');
-  const installBtn = document.getElementById('btn-pwa-install');
-  const bannerDesc = document.getElementById('pwa-banner-desc');
-
-  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
-  if (isStandalone && installBanner) {
+  // L'utilisateur ne souhaite pas de notification ou bandeau intrusif au démarrage
+  if (installBanner) {
     installBanner.style.display = 'none';
-    return;
   }
 
-  const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
-  if (isIos) {
-    if (bannerDesc) bannerDesc.textContent = "Sur iPhone : Safari > Partager 📤 > 'Sur l''écran d''accueil' ➕";
-    if (installBtn) {
-      installBtn.textContent = 'Guide 📖';
-      installBtn.onclick = () => {
-        const modalInfo = document.getElementById('modal-instructions');
-        if (modalInfo) modalInfo.classList.add('active');
-      };
-    }
-  }
-
+  // Intercepte et bloque systématiquement l'infobar ou invite automatique de Chrome
   window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
     deferredPrompt = e;
-
-    if (installBanner) installBanner.style.display = 'flex';
-    if (installBtn && !isIos) {
-      installBtn.textContent = 'Installer 📲';
-      installBtn.onclick = async () => {
-        if (!deferredPrompt) return;
-        deferredPrompt.prompt();
-        const { outcome } = await deferredPrompt.userChoice;
-        if (outcome === 'accepted') {
-          if (installBanner) installBanner.style.display = 'none';
-        }
-        deferredPrompt = null;
-      };
-    }
+    // On n'affiche aucun bandeau automatique non sollicité
+    if (installBanner) installBanner.style.display = 'none';
   });
 
   window.addEventListener('appinstalled', () => {
@@ -123,18 +96,28 @@ function initAiSettings() {
     }
   };
 
-  btnAi.addEventListener('click', () => {
+  const closeAiModal = () => {
+    modalAi.classList.remove('active');
+    modalAi.style.display = 'none';
+  };
+
+  btnAi.addEventListener('click', (e) => {
+    e.preventDefault();
+    sfx.init();
     if (inputKey) inputKey.value = getGeminiApiKey();
     if (inputProxy) inputProxy.value = getCustomProxyUrl();
     updateStatus();
     modalAi.classList.add('active');
+    modalAi.style.display = 'flex';
   });
 
   if (btnClose) {
-    btnClose.addEventListener('click', () => {
-      modalAi.classList.remove('active');
-    });
+    btnClose.addEventListener('click', closeAiModal);
   }
+
+  modalAi.addEventListener('click', (e) => {
+    if (e.target === modalAi) closeAiModal();
+  });
 
   if (btnToggleEye && inputKey) {
     btnToggleEye.addEventListener('click', () => {
@@ -182,7 +165,7 @@ function initAiSettings() {
     btnSave.addEventListener('click', () => {
       if (inputKey) setGeminiApiKey(inputKey.value);
       if (inputProxy) setCustomProxyUrl(inputProxy.value);
-      modalAi.classList.remove('active');
+      closeAiModal();
     });
   }
 }
