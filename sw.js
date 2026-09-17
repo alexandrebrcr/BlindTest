@@ -1,5 +1,5 @@
 // Service Worker pour BlindTest Party PWA
-const CACHE_NAME = 'blindtest-v1';
+const CACHE_NAME = 'blindtest-v2';
 const STATIC_ASSETS = [
   './',
   './index.html',
@@ -10,6 +10,7 @@ const STATIC_ASSETS = [
   './js/audio-player.js',
   './js/sfx.js',
   './js/categories.js',
+  './js/ai-generator.js',
   './js/itunes-api.js',
   './js/game-engine.js',
   './js/buzzer-engine.js',
@@ -41,7 +42,11 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   // Ne pas intercepter les requêtes audio ou API externes en cache strict pour toujours avoir les previews
-  if (event.request.url.includes('itunes.apple.com') || event.request.url.includes('mzstatic.com')) {
+  if (
+    event.request.url.includes('itunes.apple.com') ||
+    event.request.url.includes('mzstatic.com') ||
+    event.request.url.includes('pollinations.ai')
+  ) {
     event.respondWith(fetch(event.request));
     return;
   }

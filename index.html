@@ -105,6 +105,27 @@
         <!-- Rempli dynamiquement en JS -->
       </div>
 
+      <!-- Bloc Thème Personnalisé par IA -->
+      <div id="box-custom-theme" class="glass-card" style="margin-bottom: 1.25rem; display: none; border-color: rgba(255, 210, 0, 0.4);">
+        <label style="font-family: var(--font-display); font-size: 0.95rem; font-weight: 800; color: var(--accent-yellow); display: block; margin-bottom: 0.3rem;">
+          ✨ Quel est votre thème personnalisé ?
+        </label>
+        <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 0.75rem;">
+          L'IA va composer une playlist sur-mesure en évitant les clichés trop évidents !
+        </p>
+        <input type="text" class="input-answer" id="input-custom-theme" placeholder="Ex: Chansons avec un prénom, Tubes de l'été 2000..." style="margin-bottom: 0.6rem;">
+        
+        <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.35rem;">Idées de thèmes à tester :</div>
+        <div class="setting-options" id="theme-suggestions">
+          <button type="button" class="pill-option theme-suggest-pill" data-theme="Tubes de l'été des années 2000">☀️ Tubes été 2000</button>
+          <button type="button" class="pill-option theme-suggest-pill" data-theme="Chansons cultes avec un prénom dans le titre">👤 Avec un prénom</button>
+          <button type="button" class="pill-option theme-suggest-pill" data-theme="Génériques cultes de dessins animés et séries">📺 Dessins animés</button>
+          <button type="button" class="pill-option theme-suggest-pill" data-theme="Chansons d'amour et de rupture célèbres">💔 Chansons d'amour</button>
+          <button type="button" class="pill-option theme-suggest-pill" data-theme="Rock alternatif et grunge des années 90">🎸 Grunge 90s</button>
+          <button type="button" class="pill-option theme-suggest-pill" data-theme="Grands hits latino et reggaeton">🏖️ Latino</button>
+        </div>
+      </div>
+
       <!-- Paramètres de Partie -->
       <h3 class="section-title">⚙️ 3. Réglages de jeu</h3>
       <div class="settings-box">

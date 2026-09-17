@@ -2,11 +2,25 @@
 
 export const CATEGORIES = [
   {
+    id: 'custom_theme',
+    name: 'Thème Libre (IA)',
+    icon: '✨',
+    color: '#ffd200',
+    description: 'Tapez votre propre thème ou délire sur-mesure !',
+    isCustom: true,
+    country: 'FR',
+    queries: [
+      'Queen', 'Daft Punk', 'Michael Jackson', 'Eminem', 'Stromae',
+      'Indochine', 'Ed Sheeran', 'The Weeknd', 'Jul', 'Orelsan'
+    ]
+  },
+  {
     id: 'rap_fr',
     name: 'Rap Français',
     icon: '🔥',
     color: '#ff0055',
     description: 'De NTM et IAM jusqu\'à Jul, Orelsan, PNL et Ninho',
+    aiTheme: 'Le meilleur du rap français, des pionniers des années 90 aux têtes d\'affiche actuelles',
     country: 'FR',
     queries: [
       'Jul bande organisée', 'Orelsan la terre est ronde', 'PNL au dd',
@@ -23,6 +37,7 @@ export const CATEGORIES = [
     icon: '🕺',
     color: '#ff00d4',
     description: 'Les plus grands tubes disco, synthwave et new-wave',
+    aiTheme: 'Les plus grands tubes des années 80 : disco, pop internationale, synthwave, new-wave et variété française 80s',
     country: 'FR',
     queries: [
       'Michael Jackson billie jean', 'Madonna like a virgin', 'Indochine l aventurier',
@@ -40,6 +55,7 @@ export const CATEGORIES = [
     icon: '💿',
     color: '#00f2fe',
     description: 'L\'âge d\'or MTV, les boys bands, l\'eurodance et les hymnes 2000',
+    aiTheme: 'Les hymnes inoubliables des années 90 et 2000 : eurodance, pop MTV, boys bands, pop-rock et RnB 2000',
     country: 'FR',
     queries: [
       'Britney Spears baby one more time', 'Daft Punk one more time', 'Eminem without me',
@@ -56,6 +72,7 @@ export const CATEGORIES = [
     icon: '🎸',
     color: '#ff9900',
     description: 'Riffs légendaires, solos mythiques et légendes du rock',
+    aiTheme: 'Les grands classiques du rock : rock légendaire, hard rock, grunge, pop rock et hymnes de stade',
     country: 'US',
     queries: [
       'Queen bohemian rhapsody', 'AC DC highway to hell', 'Nirvana smells like teen spirit',
@@ -72,6 +89,7 @@ export const CATEGORIES = [
     icon: '✨',
     color: '#9d00ff',
     description: 'Les méga-hits mondiaux qui cartonnent sur toutes les radios',
+    aiTheme: 'Les méga-hits de la pop internationale moderne des années 2010 à aujourd\'hui',
     country: 'US',
     queries: [
       'Taylor Swift shake it off', 'The Weeknd blinding lights', 'Dua Lipa levitating',
@@ -88,6 +106,7 @@ export const CATEGORIES = [
     icon: '🏰',
     color: '#00e5ff',
     description: 'Les plus beaux classiques d\'animation Disney et génériques cultes',
+    aiTheme: 'Les plus grandes chansons de films Disney et génériques de dessins animés culte en français',
     country: 'FR',
     queries: [
       'Disney le roi lion histoire de la vie', 'Disney la reine des neiges liberee delivree',
@@ -105,6 +124,7 @@ export const CATEGORIES = [
     icon: '🎬',
     color: '#e6c800',
     description: 'Bandes originales légendaires du grand et du petit écran',
+    aiTheme: 'Les bandes originales et thèmes musicaux cultes du cinéma et des séries TV',
     country: 'US',
     queries: [
       'John Williams star wars main theme', 'Hans Zimmer pirates of the caribbean',
@@ -122,6 +142,7 @@ export const CATEGORIES = [
     icon: '🍷',
     color: '#00d26a',
     description: 'Les grands classiques de la chanson et du patrimoine français',
+    aiTheme: 'Les grands classiques incontournables du patrimoine de la chanson et variété française',
     country: 'FR',
     queries: [
       'Jean-Jacques Goldman envole-moi', 'Renaud des que le vent soufflera',

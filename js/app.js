@@ -56,14 +56,45 @@ function initCategories() {
     </div>
   `).join('');
 
+  const customThemeBox = document.getElementById('box-custom-theme');
+  const customThemeInput = document.getElementById('input-custom-theme');
+
+  // Gestion de la visibilité de l'encart Thème Personnalisé IA
+  const updateCustomThemeVisibility = (catId) => {
+    if (customThemeBox) {
+      if (catId === 'custom_theme') {
+        customThemeBox.style.display = 'block';
+        if (customThemeInput) {
+          customThemeInput.focus();
+        }
+      } else {
+        customThemeBox.style.display = 'none';
+      }
+    }
+  };
+
+  // Clic sur les suggestions de thèmes
+  document.querySelectorAll('.theme-suggest-pill').forEach(pill => {
+    pill.addEventListener('click', () => {
+      sfx.init();
+      if (customThemeInput) {
+        customThemeInput.value = pill.dataset.theme;
+        customThemeInput.focus();
+      }
+    });
+  });
+
   container.querySelectorAll('.cat-card').forEach(card => {
     card.addEventListener('click', () => {
       sfx.init();
       container.querySelectorAll('.cat-card').forEach(c => c.classList.remove('selected'));
       card.classList.add('selected');
       state.selectedCategoryId = card.dataset.catId;
+      updateCustomThemeVisibility(state.selectedCategoryId);
     });
   });
+
+  updateCustomThemeVisibility(state.selectedCategoryId);
 }
 
 function initSettings() {
@@ -188,16 +219,26 @@ async function startGame() {
   sfx.init();
   const category = getCategoryById(state.selectedCategoryId);
 
+  const customPrompt = state.selectedCategoryId === 'custom_theme'
+    ? (document.getElementById('input-custom-theme')?.value.trim() || null)
+    : null;
+
   showScreen('screen-loading');
-  document.getElementById('loading-category-name').textContent = `${category.icon} ${category.name}`;
-  document.getElementById('loading-subtext').textContent = 'Extraction des pépites musicales depuis le catalogue...';
+  const catDisplayName = (state.selectedCategoryId === 'custom_theme' && customPrompt)
+    ? `✨ ${customPrompt}`
+    : `${category.icon} ${category.name}`;
+  document.getElementById('loading-category-name').textContent = catDisplayName;
+  document.getElementById('loading-subtext').textContent = 'Extraction des pépites musicales...';
   const progressFill = document.getElementById('loading-progress-fill');
   progressFill.style.width = '10%';
 
   try {
-    const tracks = await preparePlaylist(category, state.trackCount, (percent) => {
+    const tracks = await preparePlaylist(category, state.trackCount, (percent, msg) => {
       progressFill.style.width = `${Math.max(10, percent)}%`;
-    });
+      if (msg) {
+        document.getElementById('loading-subtext').textContent = msg;
+      }
+    }, customPrompt);
 
     if (!tracks || tracks.length === 0) {
       alert("Impossible de charger les morceaux pour cette catégorie. Vérifiez votre connexion internet.");
@@ -720,11 +761,28 @@ function initRoomHostFlow() {
   // Lancement effectif de la partie par l'Hôte
   btnStart.onclick = async () => {
     const category = getCategoryById(state.selectedCategoryId);
+    const customPrompt = state.selectedCategoryId === 'custom_theme'
+      ? (document.getElementById('input-custom-theme')?.value.trim() || null)
+      : null;
+
     showScreen('screen-loading');
-    document.getElementById('loading-category-name').textContent = `Salon ${roomHost.roomCode} - ${category.name}`;
+    const catDisplayName = (state.selectedCategoryId === 'custom_theme' && customPrompt)
+      ? customPrompt
+      : category.name;
+    document.getElementById('loading-category-name').textContent = `Salon ${roomHost.roomCode} - ${catDisplayName}`;
     document.getElementById('loading-subtext').textContent = 'Préparation des morceaux...';
 
-    const tracks = await preparePlaylist(category, state.trackCount);
+    const progressFill = document.getElementById('loading-progress-fill');
+    if (progressFill) progressFill.style.width = '10%';
+
+    const tracks = await preparePlaylist(category, state.trackCount, (percent, msg) => {
+      if (progressFill) progressFill.style.width = `${Math.max(10, percent)}%`;
+      if (msg) {
+        const subtext = document.getElementById('loading-subtext');
+        if (subtext) subtext.textContent = msg;
+      }
+    }, customPrompt);
+
     if (tracks && tracks.length > 0) {
       startOnlineHostGame(tracks);
     } else {

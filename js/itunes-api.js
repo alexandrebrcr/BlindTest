@@ -58,6 +58,8 @@ export async function searchTrack(query, country = 'FR') {
   }
 }
 
+import { generateTracksFromAI } from './ai-generator.js';
+
 // Mélange d'un tableau (Fisher-Yates)
 export function shuffleArray(arr) {
   const copy = [...arr];
@@ -68,33 +70,47 @@ export function shuffleArray(arr) {
   return copy;
 }
 
-// Préparer une sélection de morceaux pour une partie complète
-export async function preparePlaylist(category, trackCount = 10, onProgress = null) {
-  const queries = shuffleArray(category.queries);
-  const selectedQueries = queries.slice(0, Math.min(queries.length, trackCount + 6));
+// Préparer une sélection de morceaux pour une partie complète (avec IA dynamique)
+export async function preparePlaylist(category, trackCount = 10, onProgress = null, customPrompt = null) {
   const pool = [];
   const seenIds = new Set();
-  let completed = 0;
 
-  for (const q of selectedQueries) {
-    const results = await searchTrack(q, category.country || 'FR');
-    for (const track of results) {
-      if (!seenIds.has(track.id) && track.title.length > 1) {
-        seenIds.add(track.id);
-        pool.push(track);
-        break; // 1 morceau par requête pour maximiser la diversité
+  const themeToAsk = customPrompt || category.aiTheme || category.name;
+
+  // 1. TENTATIVE VIA LE GÉNÉRATEUR IA (LLM sans clé d'API)
+  if (onProgress) onProgress(15, "L'IA imagine une sélection sur-mesure...");
+  // On demande le nombre sélectionné + une légère marge de sécurité (+2 ou +3)
+  // au cas où un morceau rare n'aurait pas d'extrait audio 30s disponible
+  const safetyBuffer = trackCount <= 5 ? 2 : 3;
+  const aiTracks = await generateTracksFromAI(themeToAsk, trackCount + safetyBuffer);
+
+  if (aiTracks && aiTracks.length > 0) {
+    if (onProgress) onProgress(40, "Extraction des extraits audio iTunes...");
+    let processed = 0;
+
+    for (const item of aiTracks) {
+      const query = `${item.artist} ${item.title}`;
+      const results = await searchTrack(query, category.country || 'FR');
+      for (const track of results) {
+        if (!seenIds.has(track.id) && track.title.length > 1) {
+          seenIds.add(track.id);
+          pool.push(track);
+          break;
+        }
       }
+      processed++;
+      if (onProgress) {
+        onProgress(Math.min(95, 40 + Math.round((processed / aiTracks.length) * 55)));
+      }
+      if (pool.length >= trackCount + safetyBuffer) break;
     }
-    completed++;
-    if (onProgress) {
-      onProgress(Math.round((completed / selectedQueries.length) * 100));
-    }
-    if (pool.length >= trackCount) break;
   }
 
-  // Si on n'a pas atteint le compte, on fait une passe sur les requêtes restantes
+  // 2. FALLBACK TRANSPARENT SI L'IA N'A PAS TROUVÉ ASSEZ DE MORCEAUX
   if (pool.length < trackCount) {
-    for (const q of queries.slice(selectedQueries.length)) {
+    console.log("Complément via le vivier classique...");
+    const queries = shuffleArray(category.queries || ['Queen', 'Daft Punk', 'Madonna']);
+    for (const q of queries) {
       const results = await searchTrack(q, category.country || 'FR');
       for (const track of results) {
         if (!seenIds.has(track.id)) {
