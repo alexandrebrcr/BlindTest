@@ -17,7 +17,7 @@ export function setGeminiApiKey(key) {
 }
 
 export const GEMINI_MODELS = [
-  'gemini-3.5-flash-lite',
+  'gemini-3.5-flash-lite'
 ];
 
 // Test rapide de la clé Gemini
