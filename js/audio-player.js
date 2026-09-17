@@ -7,6 +7,7 @@ export class AudioEngine {
     this.audio.crossOrigin = 'anonymous';
 
     this.isPlaying = false;
+    this.isMuted = false;
     this.startMode = 'start'; // 'start' (0s) ou 'random' (milieu de l'extrait)
     this.randomOffset = 0;
     this.maxDuration = 30; // Les extraits iTunes durent 30 secondes
@@ -45,6 +46,11 @@ export class AudioEngine {
     this.startMode = mode; // 'start' ou 'random'
   }
 
+  setMuted(muted) {
+    this.isMuted = muted;
+    this.audio.muted = muted;
+  }
+
   // Jouer un morceau avec gestion du point de départ
   async playTrack(url, startMode = null) {
     this.stop();
@@ -52,6 +58,7 @@ export class AudioEngine {
 
     return new Promise((resolve, reject) => {
       this.audio.src = url;
+      this.audio.muted = this.isMuted;
       this.audio.volume = 1.0;
 
       const onCanPlay = () => {

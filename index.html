@@ -44,10 +44,14 @@
         <p class="hero-subtitle">En solo ou entre amis, testez votre culture musicale !</p>
       </div>
 
-      <!-- Bandeau PWA pour mobile -->
+      <!-- Bandeau PWA pour mobile (Android et iOS) -->
       <div class="pwa-banner" id="pwa-install-banner">
         <div class="pwa-banner-text">
-          📲 <strong>Installez l'app :</strong> Sur iPhone, faites <em>Partager &gt; Sur l'écran d'accueil</em> pour jouer en plein écran !
+          📲 <strong>Installez l'application :</strong>
+          <div style="margin-top: 0.25rem; font-size: 0.8rem; line-height: 1.3;">
+            <span><strong>🤖 Android :</strong> Menu 3 points &gt; <em>Installer l'application</em></span><br>
+            <span><strong>🍏 iPhone :</strong> Safari &gt; Partager &gt; <em>Sur l'écran d'accueil</em></span>
+          </div>
         </div>
       </div>
 
@@ -338,9 +342,15 @@
       <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 0.8rem; line-height: 1.4;">
         <strong>🚨 Soirée Buzzer :</strong> Posez le smartphone ou la tablette au centre de la table. Chaque joueur a son coin d'écran. Le premier qui touche gagne 5 secondes pour crier sa réponse !
       </p>
-      <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 1rem; line-height: 1.4;">
-        <strong>📲 Installer sur iPhone :</strong> Ouvrez ce site dans <em>Safari</em>, appuyez sur le bouton <em>Partager</em> (l'icône avec le carré et la flèche vers le haut), puis sélectionnez <em>"Sur l'écran d'accueil"</em>.
-      </p>
+      <div style="background: rgba(255, 255, 255, 0.05); border-radius: var(--radius-sm); padding: 0.75rem; margin-bottom: 1rem;">
+        <strong style="color: var(--primary-cyan); font-size: 0.9rem;">📲 Comment installer l'application ?</strong>
+        <p style="font-size: 0.82rem; color: var(--text-muted); margin-top: 0.4rem; line-height: 1.35;">
+          <strong>🤖 Android (Chrome) :</strong> Une invite apparaît souvent automatiquement au bas de l'écran. Sinon, touchez les <strong>3 points verticaux</strong> en haut à droite &gt; <em>"Installer l'application"</em> (ou <em>"Ajouter à l'écran d'accueil"</em>).
+        </p>
+        <p style="font-size: 0.82rem; color: var(--text-muted); margin-top: 0.4rem; line-height: 1.35;">
+          <strong>🍏 iPhone (Safari) :</strong> Ouvrez le jeu dans <strong>Safari</strong>, appuyez sur le bouton <strong>Partager</strong> (le carré avec la flèche vers le haut 📤 en bas), faites défiler et choisissez <em>"Sur l'écran d'accueil"</em>.
+        </p>
+      </div>
       <button class="btn-primary" id="btn-close-instructions">J'ai compris ! 👍</button>
     </div>
   </div>

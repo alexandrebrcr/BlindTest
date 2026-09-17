@@ -129,11 +129,13 @@ function initSettings() {
 
   document.getElementById('btn-replay-same').addEventListener('click', startGame);
 
-  // Toggle Son
+  // Toggle Son (Bruitages ET Musique)
   const btnSound = document.getElementById('btn-sound-toggle');
   btnSound.addEventListener('click', () => {
-    sfx.enabled = !sfx.enabled;
-    btnSound.textContent = sfx.enabled ? '🔊' : '🔇';
+    const willMute = sfx.enabled; // Si le son était activé, on mute
+    sfx.enabled = !willMute;
+    audioEngine.setMuted(willMute);
+    btnSound.textContent = willMute ? '🔇' : '🔊';
   });
 
   // Modale d'instructions
