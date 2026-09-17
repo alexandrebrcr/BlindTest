@@ -1,4 +1,4 @@
-// Moteur de jeu Solo (QCM 4 choix & Saisie libre avec tolérance orthographique)
+﻿// Moteur de jeu Solo (QCM 4 choix & Saisie libre avec tolérance orthographique)
 import { sfx } from './sfx.js';
 import { audioEngine } from './audio-player.js';
 
@@ -36,33 +36,81 @@ export function levenshteinDistance(a, b) {
   return matrix[b.length][a.length];
 }
 
-// Vérification de la réponse saisie par l'utilisateur
-export function checkAnswerSimilarity(userInput, targetTitle, targetArtist) {
-  const cleanInput = normalizeString(userInput);
-  const cleanTitle = normalizeString(targetTitle);
-  const cleanArtist = normalizeString(targetArtist);
+// Vérifie si une chaîne saisie correspond à une cible (exacte, sous-chaîne ou Levenshtein)
+function matchesCandidate(cleanInput, targetRaw) {
+  if (!targetRaw) return false;
+  const cleanTarget = normalizeString(targetRaw);
+  if (!cleanTarget || cleanTarget.length < 2) return false;
 
+  // 1. Égalité ou inclusion directe
+  if (cleanTarget === cleanInput) return true;
+  if (cleanInput.length >= 3 && cleanTarget.includes(cleanInput)) return true;
+  if (cleanTarget.length >= 4 && cleanInput.includes(cleanTarget)) return true;
+
+  // 2. Tolérance Levenshtein
+  const dist = levenshteinDistance(cleanInput, cleanTarget);
+  const maxAllowed = Math.max(1, Math.floor(cleanTarget.length * 0.28));
+  if (dist <= maxAllowed) return true;
+
+  // 3. Comparaison par mots significatifs (ex: "roi lion" vs "le roi lion")
+  const inputWords = cleanInput.split(' ').filter(w => w.length > 2);
+  const targetWords = cleanTarget.split(' ').filter(w => w.length > 2);
+  if (inputWords.length > 0 && targetWords.length > 0) {
+    const allInputInTarget = inputWords.every(iw => targetWords.some(tw => tw === iw || (tw.length >= 4 && tw.startsWith(iw))));
+    if (allInputInTarget) return true;
+  }
+
+  return false;
+}
+
+// Vérification de la réponse saisie par l'utilisateur
+// Accepte soit (userInput, trackObject) soit (userInput, targetTitle, targetArtist, movieTitle, album)
+export function checkAnswerSimilarity(userInput, targetTitleOrTrack, targetArtist = '', movieTitle = null, album = null) {
+  const cleanInput = normalizeString(userInput);
   if (cleanInput.length < 2) return { isCorrect: false, type: null };
 
-  // 1. Match exact ou inclusion
-  if (cleanTitle.includes(cleanInput) || cleanInput.includes(cleanTitle)) {
-    return { isCorrect: true, type: 'title' };
-  }
-  if (cleanArtist.includes(cleanInput) || cleanInput.includes(cleanArtist)) {
-    return { isCorrect: true, type: 'artist' };
+  let title = '';
+  let artist = '';
+  let movie = '';
+  let alb = '';
+  let rawTitle = '';
+
+  if (targetTitleOrTrack && typeof targetTitleOrTrack === 'object') {
+    title = targetTitleOrTrack.title || '';
+    artist = targetTitleOrTrack.artist || '';
+    movie = targetTitleOrTrack.movieTitle || targetTitleOrTrack.movie || '';
+    alb = targetTitleOrTrack.album || '';
+    rawTitle = targetTitleOrTrack.rawTitle || '';
+  } else {
+    title = targetTitleOrTrack || '';
+    artist = targetArtist || '';
+    movie = movieTitle || '';
+    alb = album || '';
   }
 
-  // 2. Tolérance aux fautes (Levenshtein)
-  const distTitle = levenshteinDistance(cleanInput, cleanTitle);
-  const maxAllowedDistTitle = Math.max(1, Math.floor(cleanTitle.length * 0.25));
-  if (distTitle <= maxAllowedDistTitle) {
-    return { isCorrect: true, type: 'title_approx' };
+  // 1. Vérification du film / série / dessin animé (priorité pour Disney et B.O.)
+  if (movie && matchesCandidate(cleanInput, movie)) {
+    return { isCorrect: true, type: 'movie', label: `Film / Série : ${movie}` };
   }
 
-  const distArtist = levenshteinDistance(cleanInput, cleanArtist);
-  const maxAllowedDistArtist = Math.max(1, Math.floor(cleanArtist.length * 0.25));
-  if (distArtist <= maxAllowedDistArtist) {
-    return { isCorrect: true, type: 'artist_approx' };
+  // 2. Vérification du titre de la chanson
+  if (matchesCandidate(cleanInput, title)) {
+    return { isCorrect: true, type: 'title', label: `Titre : ${title}` };
+  }
+
+  // 3. Vérification de l'artiste ou compositeur
+  if (matchesCandidate(cleanInput, artist)) {
+    return { isCorrect: true, type: 'artist', label: `Artiste : ${artist}` };
+  }
+
+  // 4. Vérification du nom d'album si distinct
+  if (alb && matchesCandidate(cleanInput, alb)) {
+    return { isCorrect: true, type: 'album', label: `Album : ${alb}` };
+  }
+
+  // 5. Vérification du titre brut avec mentions entre parenthèses
+  if (rawTitle && matchesCandidate(cleanInput, rawTitle)) {
+    return { isCorrect: true, type: 'rawTitle', label: `Titre : ${title}` };
   }
 
   return { isCorrect: false, type: null };
@@ -183,16 +231,17 @@ export class GameEngine {
     const track = this.getCurrentTrack();
     let isCorrect = false;
     let pointsGained = 0;
+    let matchInfo = null;
 
     if (this.gameMode === 'qcm') {
       if (answer && answer.isCorrect) {
         isCorrect = true;
       }
     } else {
-      // Mode Saisie Libre
+      // Mode Saisie Libre : vérification tolérante sur le titre, le film, l'artiste ou l'album
       if (answer && typeof answer === 'string') {
-        const check = checkAnswerSimilarity(answer, track.title, track.artist);
-        isCorrect = check.isCorrect;
+        matchInfo = checkAnswerSimilarity(answer, track);
+        isCorrect = matchInfo.isCorrect;
       }
     }
 
@@ -217,6 +266,7 @@ export class GameEngine {
       track,
       isCorrect,
       userAnswer: answer,
+      matchInfo,
       pointsGained,
       timeLeft: this.timeLeft
     });
@@ -225,6 +275,7 @@ export class GameEngine {
       this.onRoundEnd({
         track,
         isCorrect,
+        matchInfo,
         pointsGained,
         score: this.score,
         streak: this.streak,

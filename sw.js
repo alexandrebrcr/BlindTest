@@ -1,5 +1,5 @@
-// Service Worker pour BlindTest Party PWA
-const CACHE_NAME = 'blindtest-v3';
+﻿// Service Worker pour BlindTest Party PWA
+const CACHE_NAME = 'blindtest-v4';
 const STATIC_ASSETS = [
   './',
   './index.html',
@@ -45,7 +45,8 @@ self.addEventListener('fetch', (event) => {
   if (
     event.request.url.includes('itunes.apple.com') ||
     event.request.url.includes('mzstatic.com') ||
-    event.request.url.includes('pollinations.ai')
+    event.request.url.includes('pollinations.ai') ||
+    event.request.url.includes('googleapis.com')
   ) {
     event.respondWith(fetch(event.request));
     return;

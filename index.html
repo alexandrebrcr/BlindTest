@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
@@ -35,6 +35,7 @@
       </div>
       <div class="header-actions">
         <button class="icon-btn" id="btn-sound-toggle" title="Activer / Désactiver les effets sonores">🔊</button>
+        <button class="icon-btn" id="btn-ai-settings" title="Réglages IA (Google Gemini)">🤖</button>
         <button class="icon-btn" id="btn-info-modal" title="Règles et installation">ℹ️</button>
       </div>
     </header>
@@ -208,6 +209,7 @@
 
       <!-- Révélation d'informations après réponse -->
       <div class="track-reveal-card" id="solo-reveal-box">
+        <div class="reveal-movie-badge" id="solo-reveal-movie" style="display: none;"></div>
         <div class="track-reveal-title" id="solo-reveal-title">Écoutez bien...</div>
         <div class="track-reveal-artist" id="solo-reveal-artist">Quel est ce morceau ?</div>
         <div class="track-reveal-meta" id="solo-reveal-meta"></div>
@@ -522,6 +524,7 @@
     <div class="buzzer-reveal-modal" id="buzzer-reveal-modal">
       <div class="glass-card reveal-card-body">
         <img src="" id="buzzer-reveal-img" class="reveal-artwork-img" alt="Pochette">
+        <div class="reveal-movie-badge" id="buzzer-reveal-movie" style="display: none;"></div>
         <div style="font-family: var(--font-display); font-size: 1.4rem; font-weight: 800;" id="buzzer-reveal-title">Titre</div>
         <div style="color: var(--primary-cyan); font-weight: 700; margin-bottom: 0.2rem;" id="buzzer-reveal-artist">Artiste</div>
         <div style="color: var(--text-muted); font-size: 0.8rem; margin-bottom: 1.2rem;" id="buzzer-reveal-meta">Année</div>
@@ -529,6 +532,62 @@
         <div id="buzzer-point-awarded" style="font-weight: 800; margin-bottom: 1rem; color: var(--accent-green);">+1 pt pour Joueur 1 !</div>
         <button class="btn-primary" id="btn-buzzer-next-round">Morceau Suivant ➡️</button>
       </div>
+    </div>
+  </div>
+
+  <!-- Modal Réglages IA (Google Gemini) -->
+  <div class="buzzer-modal-overlay" id="modal-ai-settings">
+    <div class="glass-card" style="max-width: 480px; text-align: left; width: 100%;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <h3 style="font-family: var(--font-display); font-size: 1.3rem; display: flex; align-items: center; gap: 0.5rem;">
+          🤖 Réglages IA (Google Gemini)
+        </h3>
+        <button class="icon-btn" id="btn-close-ai-modal" style="width: 32px; height: 32px; font-size: 0.9rem;" title="Fermer">✕</button>
+      </div>
+
+      <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem; line-height: 1.4;">
+        Générez des blind tests sur-mesure ultra-rapides (&lt; 1s) pour vos thèmes personnalisés en connectant <strong>Google Gemini</strong> gratuitement.
+      </p>
+
+      <div style="background: rgba(255, 255, 255, 0.04); border: 1px solid var(--border-glass); border-radius: var(--radius-sm); padding: 0.85rem; margin-bottom: 1rem;">
+        <label for="input-gemini-key" style="font-size: 0.8rem; font-weight: 700; text-transform: uppercase; color: var(--primary-cyan); display: block; margin-bottom: 0.4rem;">
+          🔑 Clé API Google Gemini (Gratuite)
+        </label>
+        <div style="display: flex; gap: 0.4rem;">
+          <input type="password" id="input-gemini-key" class="input-answer" placeholder="Collez votre clé AIzaSy..." style="font-size: 0.85rem; flex: 1;">
+          <button type="button" id="btn-toggle-key-visibility" class="icon-btn" style="width: 42px; height: 42px; font-size: 0.9rem;" title="Afficher / Masquer">👁️</button>
+        </div>
+        <div id="ai-key-status" style="font-size: 0.78rem; margin-top: 0.4rem; min-height: 1.1rem;"></div>
+
+        <div style="margin-top: 0.6rem; display: flex; gap: 0.5rem;">
+          <button class="btn-secondary" id="btn-test-gemini-key" style="padding: 0.5rem 0.9rem; font-size: 0.8rem; width: auto;">Tester la clé ⚡</button>
+          <button class="btn-secondary" id="btn-clear-gemini-key" style="padding: 0.5rem 0.8rem; font-size: 0.8rem; width: auto; color: var(--accent-red);">Effacer</button>
+        </div>
+      </div>
+
+      <div style="background: rgba(0, 242, 254, 0.06); border: 1px solid rgba(0, 242, 254, 0.2); border-radius: var(--radius-sm); padding: 0.75rem; margin-bottom: 1rem;">
+        <strong style="color: var(--primary-cyan); font-size: 0.85rem;">💡 Comment obtenir votre clé gratuite ?</strong>
+        <ol style="margin-top: 0.35rem; padding-left: 1.2rem; font-size: 0.78rem; color: var(--text-muted); line-height: 1.4;">
+          <li>Allez sur <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener" style="color: var(--primary-cyan); text-decoration: underline; font-weight: 600;">Google AI Studio</a></li>
+          <li>Connectez-vous avec votre compte Google et cliquez sur <strong>"Create API Key"</strong></li>
+          <li>Copiez votre clé et collez-la ci-dessus !</li>
+        </ol>
+        <p style="font-size: 0.73rem; color: var(--text-dim); margin-top: 0.4rem;">
+          🔒 Sécurité : votre clé reste stockée localement dans votre navigateur (localStorage). Elle n'est jamais envoyée sur Git ni visible par quiconque.
+        </p>
+      </div>
+
+      <details style="margin-bottom: 1rem; font-size: 0.8rem;">
+        <summary style="cursor: pointer; color: var(--text-muted); padding: 0.2rem 0;">⚙️ Option : URL Proxy Cloudflare Worker</summary>
+        <div style="margin-top: 0.5rem;">
+          <input type="url" id="input-custom-proxy" class="input-answer" placeholder="https://mon-proxy.workers.dev" style="font-size: 0.8rem;">
+          <p style="font-size: 0.72rem; color: var(--text-dim); margin-top: 0.3rem;">
+            Optionnel. Si vous déployez le script dans le dossier <code>tools/cloudflare-worker.js</code>.
+          </p>
+        </div>
+      </details>
+
+      <button class="btn-primary" id="btn-save-ai-settings">Enregistrer les réglages ✅</button>
     </div>
   </div>
 

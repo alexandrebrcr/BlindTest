@@ -1,4 +1,4 @@
-// Définition des catégories de Blind Test et de leurs morceaux/artistes cultes
+﻿// Définition des catégories de Blind Test et de leurs morceaux/artistes cultes
 
 export const CATEGORIES = [
   {
@@ -13,7 +13,8 @@ export const CATEGORIES = [
       'Queen', 'Daft Punk', 'Michael Jackson', 'Eminem', 'Stromae',
       'Indochine', 'Ed Sheeran', 'The Weeknd', 'Jul', 'Orelsan',
       'ABBA', 'Bee Gees', 'David Bowie', 'Elton John', 'Beyonce',
-      'Coldplay', 'Bruno Mars', 'Dua Lipa', 'Rihanna', 'Katy Perry'
+      'Coldplay', 'Bruno Mars', 'Dua Lipa', 'Rihanna', 'Katy Perry',
+      'Lady Gaga', 'Avicii', 'Angèle', 'Gims', 'Kendji Girac'
     ],
     decoys: [
       { title: 'Bohemian Rhapsody', artist: 'Queen' },
@@ -27,7 +28,15 @@ export const CATEGORIES = [
       { title: 'Stayin\' Alive', artist: 'Bee Gees' },
       { title: 'Rolling in the Deep', artist: 'Adele' },
       { title: 'Uptown Funk', artist: 'Bruno Mars' },
-      { title: 'Dancing Queen', artist: 'ABBA' }
+      { title: 'Dancing Queen', artist: 'ABBA' },
+      { title: 'Get Lucky', artist: 'Daft Punk' },
+      { title: 'Bad Romance', artist: 'Lady Gaga' },
+      { title: 'Wake Me Up', artist: 'Avicii' },
+      { title: 'Balance ton quoi', artist: 'Angèle' },
+      { title: 'Can\'t Stop the Feeling!', artist: 'Justin Timberlake' },
+      { title: 'Titanium', artist: 'David Guetta & Sia' },
+      { title: 'Happy', artist: 'Pharrell Williams' },
+      { title: 'Locked Out of Heaven', artist: 'Bruno Mars' }
     ]
   },
   {
@@ -47,7 +56,9 @@ export const CATEGORIES = [
       'Aya Nakamura djadja', 'Kaaris tchoin', 'Heuss l\'enfoire moulaga', 'PLK un peu de haine',
       'Dinos helsinki', 'Josman j\'aime bien', 'Tiakola meuda', 'Werenoi laboratoire',
       'SDM bolide allemand', 'Kery James le retour du rap francais', 'Sniper graves dans la roche',
-      'Sexion d\'Assaut desole', 'Gringe qui dit mieux', 'Doc Gyneco viens voir le docteur'
+      'Sexion d\'Assaut desole', 'Gringe qui dit mieux', 'Doc Gyneco viens voir le docteur',
+      'Lomepal yeux disent', 'Hamza fade up', 'Maes madrina', 'Gradur sheguey',
+      'Alonzo batard', 'Lacrim corleone', 'Freeze Corleone freeze rael', 'Rohff qui est l\'exemple'
     ],
     decoys: [
       { title: 'Bande organisée', artist: '13 Organisé' },
@@ -66,7 +77,20 @@ export const CATEGORIES = [
       { title: 'Die', artist: 'Gazo' },
       { title: 'Désaccordé', artist: 'Vald' },
       { title: 'Bolide allemand', artist: 'SDM' },
-      { title: 'Désolé', artist: 'Sexion d\'Assaut' }
+      { title: 'Désolé', artist: 'Sexion d\'Assaut' },
+      { title: 'Yeux disent', artist: 'Lomepal' },
+      { title: 'Fade Up', artist: 'Zeg P, Hamza & SCH' },
+      { title: 'Madrina', artist: 'Maes ft. Booba' },
+      { title: 'Moulaga', artist: 'Heuss L\'enfoiré & Jul' },
+      { title: 'Un peu de haine', artist: 'PLK' },
+      { title: 'Gravé dans la roche', artist: 'Sniper' },
+      { title: 'Viens voir le docteur', artist: 'Doc Gynéco' },
+      { title: 'Tchoin', artist: 'Kaaris' },
+      { title: 'En feu', artist: 'Soprano' },
+      { title: 'Basique', artist: 'Orelsan' },
+      { title: '911', artist: 'Damso' },
+      { title: 'Deux Frères', artist: 'PNL' },
+      { title: 'Tout le monde veut un feat', artist: 'Ninho' }
     ]
   },
   {
@@ -87,7 +111,9 @@ export const CATEGORIES = [
       'Earth Wind and Fire let s groove', 'Rick Astley never gonna give you up',
       'Niagara l amour a la plage', 'Jeanne Mas en rouge et noir', 'Renaud morgane de toi',
       'Cookie Dingler femme liberee', 'Kool and the Gang celebration', 'Bonnie Tyler total eclipse of the heart',
-      'George Michael careless whisper', 'The Police every breath you take'
+      'George Michael careless whisper', 'The Police every breath you take',
+      'Alphaville big in japan', 'Tears for Fears everybody wants to rule the world',
+      'Kylie Minogue the locomotion', 'Modern Talking you\'re my heart you\'re my soul'
     ],
     decoys: [
       { title: 'Billie Jean', artist: 'Michael Jackson' },
@@ -103,7 +129,20 @@ export const CATEGORIES = [
       { title: 'Wake Me Up Before You Go-Go', artist: 'Wham!' },
       { title: 'Never Gonna Give You Up', artist: 'Rick Astley' },
       { title: 'En rouge et noir', artist: 'Jeanne Mas' },
-      { title: 'Sous les sunlights des tropiques', artist: 'Gilbert Montagné' }
+      { title: 'Sous les sunlights des tropiques', artist: 'Gilbert Montagné' },
+      { title: 'Femme libérée', artist: 'Cookie Dingler' },
+      { title: 'Every Breath You Take', artist: 'The Police' },
+      { title: 'Total Eclipse of the Heart', artist: 'Bonnie Tyler' },
+      { title: 'Careless Whisper', artist: 'George Michael' },
+      { title: 'Partenaire Particulier', artist: 'Partenaire Particulier' },
+      { title: 'L\'amour à la plage', artist: 'Niagara' },
+      { title: 'Ville de lumière', artist: 'Gold' },
+      { title: 'Celebration', artist: 'Kool & The Gang' },
+      { title: 'Another One Bites the Dust', artist: 'Queen' },
+      { title: 'Big in Japan', artist: 'Alphaville' },
+      { title: 'Thriller', artist: 'Michael Jackson' },
+      { title: 'Material Girl', artist: 'Madonna' },
+      { title: 'Casser la voix', artist: 'Patrick Bruel' }
     ]
   },
   {
@@ -122,7 +161,9 @@ export const CATEGORIES = [
       'Rihanna umbrella', 'Alizee moi lolita', 'Celine Dion pour que tu m aimes encore',
       'Gala freed from desire', 'Corona the rhythm of the night', 'Coolio gangsta s paradise',
       'Destiny s Child survivor', 'Outkast hey ya', 'Backstreet Boys everybody',
-      'Aqua barbie girl', 'Lou Bega mambo no 5', 'Tragedie est ce que tu m entends'
+      'Aqua barbie girl', 'Lou Bega mambo no 5', 'Tragedie est ce que tu m entends',
+      'Rednex cotton eye joe', 'Willy Denzey le mur du son', 'Yannick ces soirees la',
+      'Superbus butterfly', 'O-Zone dragostea din tei', 'Cascada everytimer we touch'
     ],
     decoys: [
       { title: '...Baby One More Time', artist: 'Britney Spears' },
@@ -138,7 +179,21 @@ export const CATEGORIES = [
       { title: 'Moi... Lolita', artist: 'Alizée' },
       { title: 'Freed from Desire', artist: 'Gala' },
       { title: 'J\'t\'emmène au vent', artist: 'Louise Attaque' },
-      { title: 'Hey Ya!', artist: 'OutKast' }
+      { title: 'Hey Ya!', artist: 'OutKast' },
+      { title: 'Barbie Girl', artist: 'Aqua' },
+      { title: 'Gangsta\'s Paradise', artist: 'Coolio' },
+      { title: 'Pour que tu m\'aimes encore', artist: 'Céline Dion' },
+      { title: 'Everybody (Backstreet\'s Back)', artist: 'Backstreet Boys' },
+      { title: 'Est-ce que tu m\'entends ?', artist: 'Tragédie' },
+      { title: 'Ces soirées-là', artist: 'Yannick' },
+      { title: 'Umbrella', artist: 'Rihanna' },
+      { title: 'Complicated', artist: 'Avril Lavigne' },
+      { title: 'Survivor', artist: 'Destiny\'s Child' },
+      { title: 'Dragostea Din Tei', artist: 'O-Zone' },
+      { title: 'Mambo No. 5', artist: 'Lou Bega' },
+      { title: 'The Rhythm of the Night', artist: 'Corona' },
+      { title: 'Toxic', artist: 'Britney Spears' },
+      { title: 'Around the World', artist: 'Daft Punk' }
     ]
   },
   {
@@ -157,7 +212,9 @@ export const CATEGORIES = [
       'Deep Purple smoke on the water', 'The Police roxanne', 'U2 with or without you',
       'Bon Jovi livin on a prayer', 'Scorpions wind of change', 'Dire Straits sultans of swing',
       'Aerosmith dream on', 'Metallica enter sandman', 'The Clash should i stay or should i go',
-      'Green Day basket case', 'Blink-182 all the small things', 'Foo Fighters everlong'
+      'Green Day basket case', 'Blink-182 all the small things', 'Foo Fighters everlong',
+      'Radiohead creep', 'Linkin Park numb', 'The White Stripes seven nation army',
+      'Muse plug in baby', 'The Killers mr brightside', 'Joan Jett i love rock n roll'
     ],
     decoys: [
       { title: 'Bohemian Rhapsody', artist: 'Queen' },
@@ -172,7 +229,20 @@ export const CATEGORIES = [
       { title: 'Smoke on the Water', artist: 'Deep Purple' },
       { title: 'Ça (C\'est vraiment toi)', artist: 'Téléphone' },
       { title: 'Livin\' on a Prayer', artist: 'Bon Jovi' },
-      { title: 'Basket Case', artist: 'Green Day' }
+      { title: 'Basket Case', artist: 'Green Day' },
+      { title: 'Seven Nation Army', artist: 'The White Stripes' },
+      { title: 'Creep', artist: 'Radiohead' },
+      { title: 'Enter Sandman', artist: 'Metallica' },
+      { title: 'Should I Stay or Should I Go', artist: 'The Clash' },
+      { title: 'Sultans of Swing', artist: 'Dire Straits' },
+      { title: 'Wind of Change', artist: 'Scorpions' },
+      { title: 'All the Small Things', artist: 'Blink-182' },
+      { title: 'Roxanne', artist: 'The Police' },
+      { title: 'With or Without You', artist: 'U2' },
+      { title: 'I Love Rock \'n\' Roll', artist: 'Joan Jett' },
+      { title: 'Let It Be', artist: 'The Beatles' },
+      { title: 'Back in Black', artist: 'AC/DC' },
+      { title: 'We Will Rock You', artist: 'Queen' }
     ]
   },
   {
@@ -191,7 +261,9 @@ export const CATEGORIES = [
       'Lady Gaga bad romance', 'Miley Cyrus flowers', 'Imagine Dragons radioactive',
       'Maroon 5 sugar', 'Adele rolling in the deep', 'Stromae alors on danse',
       'Shawn Mendes senorita', 'Sam Smith stay with me', 'Post Malone circles',
-      'Lizzo about damn time', 'Olivia Rodrigo drivers license', 'Camila Cabello havana'
+      'Lizzo about damn time', 'Olivia Rodrigo drivers license', 'Camila Cabello havana',
+      'Beyonce single ladies', 'Rihanna diamonds', 'Avicii wake me up',
+      'Pitbull give me everything', 'David Guetta titanium', 'Justin Timberlake can\'t stop the feeling'
     ],
     decoys: [
       { title: 'Shake It Off', artist: 'Taylor Swift' },
@@ -206,7 +278,19 @@ export const CATEGORIES = [
       { title: 'Flowers', artist: 'Miley Cyrus' },
       { title: 'Bad Romance', artist: 'Lady Gaga' },
       { title: 'Rolling in the Deep', artist: 'Adele' },
-      { title: 'Havana', artist: 'Camila Cabello' }
+      { title: 'Havana', artist: 'Camila Cabello' },
+      { title: '7 rings', artist: 'Ariana Grande' },
+      { title: 'Stay', artist: 'The Kid LAROI & Justin Bieber' },
+      { title: 'Roar', artist: 'Katy Perry' },
+      { title: 'Radioactive', artist: 'Imagine Dragons' },
+      { title: 'Sugar', artist: 'Maroon 5' },
+      { title: 'Diamonds', artist: 'Rihanna' },
+      { title: 'Single Ladies', artist: 'Beyoncé' },
+      { title: 'Drivers License', artist: 'Olivia Rodrigo' },
+      { title: 'Circles', artist: 'Post Malone' },
+      { title: 'Señorita', artist: 'Shawn Mendes & Camila Cabello' },
+      { title: 'Starboy', artist: 'The Weeknd' },
+      { title: 'Someone Like You', artist: 'Adele' }
     ]
   },
   {
@@ -239,26 +323,42 @@ export const CATEGORIES = [
       'Disney la princesse et la grenouille au bout du reve',
       'Disney pinocchio quand on prie la bonne etoile',
       'Disney zootopie try everything',
+      'Disney aladdin prince ali',
+      'Disney le roi lion hakuna matata',
+      'Disney mulan reflexion',
+      'Disney hercule jamais je n avouerai',
+      'Disney coco ne m oublie pas',
+      'Disney la petite sirene partir la bas',
       'Capitaine Flam generique',
-      'Inspecteur Gadget generique'
+      'Inspecteur Gadget generique',
+      'Olive et Tom generique'
     ],
     decoys: [
-      { title: 'L\'Histoire de la vie', artist: 'Le Roi Lion' },
-      { title: 'Ce rêve bleu', artist: 'Aladdin' },
-      { title: 'Libérée, délivrée', artist: 'La Reine des Neiges' },
-      { title: 'Il en faut peu pour être heureux', artist: 'Le Livre de la Jungle' },
-      { title: 'Comme un homme', artist: 'Mulan' },
-      { title: 'Sous l\'océan', artist: 'La Petite Sirène' },
-      { title: 'Hakuna Matata', artist: 'Le Roi Lion' },
-      { title: 'Le Bleu lumière', artist: 'Vaiana' },
-      { title: 'Être un homme comme vous', artist: 'Le Livre de la Jungle' },
-      { title: 'Histoire éternelle', artist: 'La Belle et la Bête' },
-      { title: 'Tout le monde veut devenir un cat', artist: 'Les Aristochats' },
-      { title: 'De zéro en héros', artist: 'Hercule' },
-      { title: 'L\'Air du vent', artist: 'Pocahontas' },
-      { title: 'Je suis ton ami', artist: 'Toy Story' },
-      { title: 'Ne parlons pas de Bruno', artist: 'Encanto' },
-      { title: 'Attrapez-les tous !', artist: 'Pokémon' }
+      { title: 'L\'Histoire de la vie', artist: 'Le Roi Lion', movie: 'Le Roi Lion' },
+      { title: 'Ce rêve bleu', artist: 'Aladdin', movie: 'Aladdin' },
+      { title: 'Libérée, délivrée', artist: 'La Reine des Neiges', movie: 'La Reine des Neiges' },
+      { title: 'Il en faut peu pour être heureux', artist: 'Le Livre de la Jungle', movie: 'Le Livre de la Jungle' },
+      { title: 'Comme un homme', artist: 'Mulan', movie: 'Mulan' },
+      { title: 'Sous l\'océan', artist: 'La Petite Sirène', movie: 'La Petite Sirène' },
+      { title: 'Hakuna Matata', artist: 'Le Roi Lion', movie: 'Le Roi Lion' },
+      { title: 'Le Bleu lumière', artist: 'Vaiana', movie: 'Vaiana' },
+      { title: 'Être un homme comme vous', artist: 'Le Livre de la Jungle', movie: 'Le Livre de la Jungle' },
+      { title: 'Histoire éternelle', artist: 'La Belle et la Bête', movie: 'La Belle et la Bête' },
+      { title: 'Tout le monde veut devenir un cat', artist: 'Les Aristochats', movie: 'Les Aristochats' },
+      { title: 'De zéro en héros', artist: 'Hercule', movie: 'Hercule' },
+      { title: 'L\'Air du vent', artist: 'Pocahontas', movie: 'Pocahontas' },
+      { title: 'Je suis ton ami', artist: 'Toy Story', movie: 'Toy Story' },
+      { title: 'Ne parlons pas de Bruno', artist: 'Encanto', movie: 'Encanto' },
+      { title: 'Attrapez-les tous !', artist: 'Pokémon', movie: 'Pokémon' },
+      { title: 'Prince Ali', artist: 'Aladdin', movie: 'Aladdin' },
+      { title: 'Partir là-bas', artist: 'La Petite Sirène', movie: 'La Petite Sirène' },
+      { title: 'Où est la vraie vie ?', artist: 'Raiponce', movie: 'Raiponce' },
+      { title: 'Entre deux mondes', artist: 'Tarzan', movie: 'Tarzan' },
+      { title: 'Ne m\'oublie pas', artist: 'Coco', movie: 'Coco' },
+      { title: 'C\'est la fête', artist: 'La Belle et la Bête', movie: 'La Belle et la Bête' },
+      { title: 'Bibbidi-Bobbidi-Boo', artist: 'Cendrillon', movie: 'Cendrillon' },
+      { title: 'L\'amour brille sous les étoiles', artist: 'Le Roi Lion', movie: 'Le Roi Lion' },
+      { title: 'Je voudrais un bonhomme de neige', artist: 'La Reine des Neiges', movie: 'La Reine des Neiges' }
     ]
   },
   {
@@ -278,21 +378,34 @@ export const CATEGORIES = [
       'Alan Silvestri the avengers theme', 'Clint Mansell requiem for a dream lux aeterna',
       'Brad Fiedel the terminator theme', 'John Williams indiana jones theme',
       'Lalo Schifrin mission impossible theme', 'Henry Mancini pink panther theme',
-      'Vangelis chariots of fire', 'Bill Conti rocky gonna fly now'
+      'Vangelis chariots of fire', 'Bill Conti rocky gonna fly now',
+      'Celine Dion titanic my heart will go on', 'Survivor rocky eye of the tiger',
+      'Ray Parker Jr ghostbusters', 'Adele skyfall', 'Kenny Loggins top gun danger zone',
+      'Dick Dale pulp fiction misirlou', 'Simon & Garfunkel the graduate sound of silence'
     ],
     decoys: [
-      { title: 'Star Wars (Main Theme)', artist: 'John Williams' },
-      { title: 'He\'s a Pirate', artist: 'Hans Zimmer (Pirates des Caraïbes)' },
-      { title: 'Hedwig\'s Theme', artist: 'John Williams (Harry Potter)' },
-      { title: 'Game of Thrones (Main Theme)', artist: 'Ramin Djawadi' },
-      { title: 'Now We Are Free', artist: 'Hans Zimmer (Gladiator)' },
-      { title: 'Concerning Hobbits', artist: 'Howard Shore (Le Seigneur des Anneaux)' },
-      { title: 'The Pink Panther Theme', artist: 'Henry Mancini' },
-      { title: 'James Bond Theme', artist: 'Monty Norman' },
-      { title: 'Mission Impossible Theme', artist: 'Lalo Schifrin' },
-      { title: 'The Good, the Bad and the Ugly', artist: 'Ennio Morricone' },
-      { title: 'Jurassic Park Theme', artist: 'John Williams' },
-      { title: 'The Avengers Theme', artist: 'Alan Silvestri' }
+      { title: 'Star Wars (Main Theme)', artist: 'John Williams', movie: 'Star Wars' },
+      { title: 'He\'s a Pirate', artist: 'Hans Zimmer & Klaus Badelt', movie: 'Pirates des Caraïbes' },
+      { title: 'Hedwig\'s Theme', artist: 'John Williams', movie: 'Harry Potter' },
+      { title: 'Game of Thrones (Main Theme)', artist: 'Ramin Djawadi', movie: 'Game of Thrones' },
+      { title: 'Now We Are Free', artist: 'Hans Zimmer & Lisa Gerrard', movie: 'Gladiator' },
+      { title: 'Concerning Hobbits', artist: 'Howard Shore', movie: 'Le Seigneur des Anneaux' },
+      { title: 'The Pink Panther Theme', artist: 'Henry Mancini', movie: 'La Panthère Rose' },
+      { title: 'James Bond Theme', artist: 'Monty Norman', movie: 'James Bond' },
+      { title: 'Mission Impossible Theme', artist: 'Lalo Schifrin', movie: 'Mission Impossible' },
+      { title: 'The Good, the Bad and the Ugly', artist: 'Ennio Morricone', movie: 'Le Bon, la Brute et le Truand' },
+      { title: 'Jurassic Park Theme', artist: 'John Williams', movie: 'Jurassic Park' },
+      { title: 'The Avengers Theme', artist: 'Alan Silvestri', movie: 'Avengers' },
+      { title: 'My Heart Will Go On', artist: 'Céline Dion', movie: 'Titanic' },
+      { title: 'Eye of the Tiger', artist: 'Survivor', movie: 'Rocky' },
+      { title: 'Ghostbusters', artist: 'Ray Parker Jr.', movie: 'SOS Fantômes' },
+      { title: 'Skyfall', artist: 'Adele', movie: 'James Bond Skyfall' },
+      { title: 'Danger Zone', artist: 'Kenny Loggins', movie: 'Top Gun' },
+      { title: 'Misirlou', artist: 'Dick Dale', movie: 'Pulp Fiction' },
+      { title: 'Lux Aeterna', artist: 'Clint Mansell', movie: 'Requiem for a Dream' },
+      { title: 'Interstellar Theme', artist: 'Hans Zimmer', movie: 'Interstellar' },
+      { title: 'Indiana Jones Theme', artist: 'John Williams', movie: 'Indiana Jones' },
+      { title: 'Gonna Fly Now', artist: 'Bill Conti', movie: 'Rocky' }
     ]
   },
   {
@@ -311,7 +424,10 @@ export const CATEGORIES = [
       'Claude Francois alexandrie alexandra', 'Vianney beau-papa',
       'Florent Pagny savoir aimer', 'Christophe aline', 'Michel Polnareff lettre a france',
       'Serge Gainsbourg la javanaise', 'Joe Dassin l ete indien', 'Maxime Le Forestier san francisco',
-      'Patrick Bruel casser la voix', 'Julien Clerc ma preference', 'Alain Souchon foule sentimentale'
+      'Patrick Bruel casser la voix', 'Julien Clerc ma preference', 'Alain Souchon foule sentimentale',
+      'France Gall il jouait du piano debout', 'Michel Berger la groupie du pianiste',
+      'Laurent Voulzy rockollection', 'Eddy Mitchell sur la route de memphis',
+      'Georges Brassens les copains d abord', 'Edith Piaf non je ne regrette rien'
     ],
     decoys: [
       { title: 'Envole-moi', artist: 'Jean-Jacques Goldman' },
@@ -326,7 +442,18 @@ export const CATEGORIES = [
       { title: 'Savoir aimer', artist: 'Florent Pagny' },
       { title: 'Aline', artist: 'Christophe' },
       { title: 'L\'Été indien', artist: 'Joe Dassin' },
-      { title: 'Foule sentimentale', artist: 'Alain Souchon' }
+      { title: 'Foule sentimentale', artist: 'Alain Souchon' },
+      { title: 'La Javanaise', artist: 'Serge Gainsbourg' },
+      { title: 'Il jouait du piano debout', artist: 'France Gall' },
+      { title: 'La Groupie du pianiste', artist: 'Michel Berger' },
+      { title: 'Rockollection', artist: 'Laurent Voulzy' },
+      { title: 'Casser la voix', artist: 'Patrick Bruel' },
+      { title: 'Lettre à France', artist: 'Michel Polnareff' },
+      { title: 'Non, je ne regrette rien', artist: 'Édith Piaf' },
+      { title: 'Les Copains d\'abord', artist: 'Georges Brassens' },
+      { title: 'San Francisco', artist: 'Maxime Le Forestier' },
+      { title: 'Je te promets', artist: 'Johnny Hallyday' },
+      { title: 'Je l\'aime à mourir', artist: 'Francis Cabrel' }
     ]
   }
 ];

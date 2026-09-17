@@ -1,4 +1,4 @@
-// Application Principale BlindTest Party - Orchestrateur & UI Controller
+﻿// Application Principale BlindTest Party - Orchestrateur & UI Controller
 import { CATEGORIES, getCategoryById } from './categories.js';
 import { preparePlaylist } from './itunes-api.js';
 import { audioEngine } from './audio-player.js';
@@ -6,6 +6,7 @@ import { sfx } from './sfx.js';
 import { gameEngine } from './game-engine.js';
 import { buzzerEngine } from './buzzer-engine.js';
 import { roomHost, roomClient, PLAYER_COLORS } from './room-peer.js';
+import { getGeminiApiKey, setGeminiApiKey, getCustomProxyUrl, setCustomProxyUrl, testGeminiApiKey } from './ai-generator.js';
 
 // État Global de l'Application
 const state = {
@@ -40,6 +41,152 @@ function showScreen(screenId) {
 }
 
 // ==========================================================================
+// ==========================================================================
+// PWA Installation & Réglages IA
+// ==========================================================================
+let deferredPrompt = null;
+
+function initPwaInstall() {
+  const installBanner = document.getElementById('pwa-install-banner');
+  const installBtn = document.getElementById('btn-pwa-install');
+  const bannerDesc = document.getElementById('pwa-banner-desc');
+
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+  if (isStandalone && installBanner) {
+    installBanner.style.display = 'none';
+    return;
+  }
+
+  const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  if (isIos) {
+    if (bannerDesc) bannerDesc.textContent = "Sur iPhone : Safari > Partager 📤 > 'Sur l''écran d''accueil' ➕";
+    if (installBtn) {
+      installBtn.textContent = 'Guide 📖';
+      installBtn.onclick = () => {
+        const modalInfo = document.getElementById('modal-instructions');
+        if (modalInfo) modalInfo.classList.add('active');
+      };
+    }
+  }
+
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+
+    if (installBanner) installBanner.style.display = 'flex';
+    if (installBtn && !isIos) {
+      installBtn.textContent = 'Installer 📲';
+      installBtn.onclick = async () => {
+        if (!deferredPrompt) return;
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
+          if (installBanner) installBanner.style.display = 'none';
+        }
+        deferredPrompt = null;
+      };
+    }
+  });
+
+  window.addEventListener('appinstalled', () => {
+    if (installBanner) installBanner.style.display = 'none';
+    deferredPrompt = null;
+  });
+}
+
+function initAiSettings() {
+  const btnAi = document.getElementById('btn-ai-settings');
+  const modalAi = document.getElementById('modal-ai-settings');
+  const btnClose = document.getElementById('btn-close-ai-modal');
+  const inputKey = document.getElementById('input-gemini-key');
+  const inputProxy = document.getElementById('input-custom-proxy');
+  const btnToggleEye = document.getElementById('btn-toggle-key-visibility');
+  const btnTest = document.getElementById('btn-test-gemini-key');
+  const btnClear = document.getElementById('btn-clear-gemini-key');
+  const btnSave = document.getElementById('btn-save-ai-settings');
+  const statusEl = document.getElementById('ai-key-status');
+
+  if (!btnAi || !modalAi) return;
+
+  const updateStatus = () => {
+    const key = getGeminiApiKey();
+    const proxy = getCustomProxyUrl();
+    if (key) {
+      statusEl.className = 'ai-key-status success';
+      statusEl.textContent = '✅ Clé Google Gemini active (génération < 1s)';
+    } else if (proxy) {
+      statusEl.className = 'ai-key-status success';
+      statusEl.textContent = '✅ Proxy Cloudflare Worker actif';
+    } else {
+      statusEl.className = 'ai-key-status';
+      statusEl.textContent = 'ℹ️ Aucune clé enregistrée (mode gratuit standard)';
+    }
+  };
+
+  btnAi.addEventListener('click', () => {
+    if (inputKey) inputKey.value = getGeminiApiKey();
+    if (inputProxy) inputProxy.value = getCustomProxyUrl();
+    updateStatus();
+    modalAi.classList.add('active');
+  });
+
+  if (btnClose) {
+    btnClose.addEventListener('click', () => {
+      modalAi.classList.remove('active');
+    });
+  }
+
+  if (btnToggleEye && inputKey) {
+    btnToggleEye.addEventListener('click', () => {
+      inputKey.type = inputKey.type === 'password' ? 'text' : 'password';
+      btnToggleEye.textContent = inputKey.type === 'password' ? '👁️' : '🙈';
+    });
+  }
+
+  if (btnTest && inputKey) {
+    btnTest.addEventListener('click', async () => {
+      const keyVal = inputKey.value.trim();
+      if (!keyVal) {
+        statusEl.className = 'ai-key-status error';
+        statusEl.textContent = '⚠️ Veuillez entrer une clé avant de tester.';
+        return;
+      }
+      statusEl.className = 'ai-key-status loading';
+      statusEl.textContent = '⏳ Test de connexion à Google Gemini en cours...';
+      btnTest.disabled = true;
+
+      const res = await testGeminiApiKey(keyVal);
+      btnTest.disabled = false;
+      if (res.success) {
+        statusEl.className = 'ai-key-status success';
+        statusEl.textContent = res.message;
+        setGeminiApiKey(keyVal);
+      } else {
+        statusEl.className = 'ai-key-status error';
+        statusEl.textContent = `❌ ${res.message}`;
+      }
+    });
+  }
+
+  if (btnClear && inputKey) {
+    btnClear.addEventListener('click', () => {
+      inputKey.value = '';
+      if (inputProxy) inputProxy.value = '';
+      setGeminiApiKey('');
+      setCustomProxyUrl('');
+      updateStatus();
+    });
+  }
+
+  if (btnSave) {
+    btnSave.addEventListener('click', () => {
+      if (inputKey) setGeminiApiKey(inputKey.value);
+      if (inputProxy) setCustomProxyUrl(inputProxy.value);
+      modalAi.classList.remove('active');
+    });
+  }
+}
+
 // 2. Initialisation des Catégories & Sélecteurs
 // ==========================================================================
 function initCategories() {
