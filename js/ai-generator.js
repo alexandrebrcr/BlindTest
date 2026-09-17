@@ -1,26 +1,23 @@
 // Module Générateur Musical par IA (LLM ouvert sans clé d'API, prompt anti-clichés)
 
-export async function generateTracksFromAI(themeDescription, count = 12) {
-  const prompt = `Tu es un programmateur musical expert pour des parties de Blind Test captivantes et conviviales.
-Propose une sélection de ${count} chansons pour le thème suivant : "${themeDescription}".
+// Module Générateur Musical par IA (LLM ouvert sans clé d'API, prompt anti-clichés)
 
-Consignes très importantes :
-1. Mélange des classiques incontournables et de superbes morceaux très connus des amateurs de ce genre.
-2. Évite absolument de choisir uniquement les 3 ou 4 clichés les plus évidents et rabâchés, pour garantir la surprise et le plaisir de chercher.
-3. Chaque chanson doit être réellement sortie dans le commerce et trouvable facilement sur les plateformes de streaming.
-4. Réponds UNIQUEMENT et STRICTEMENT sous forme d'un tableau JSON d'objets, comme ceci :
-[
-  {"title": "Nom du morceau", "artist": "Nom de l'artiste"}
-]
-Ne mets aucun texte avant ou après le tableau JSON, pas d'explication.`;
+export async function generateTracksFromAI(themeDescription, count = 10) {
+  const prompt = `Tu es programmateur musical pour un blind test.
+Génère une sélection de ${count} chansons variées, emblématiques et reconnaissables pour le thème : "${themeDescription}".
+Consignes :
+- Évite les clichés ultra-évidents ou sur-joués, surprends les joueurs avec de superbes pépites connues du genre.
+- Exclus les artistes accusés ou condamnés pour violences.
+- Format strict JSON uniquement, pas de texte avant ni après :
+[{"title": "Nom du morceau", "artist": "Nom de l'artiste"}]`;
 
-  // Gestion d'un timeout strict de 5 secondes pour ne jamais faire attendre le joueur
+  // Timeout généreux de 12 secondes adapté au temps de réponse des LLMs sur mobile
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 5500);
+  const timeoutId = setTimeout(() => controller.abort(), 12000);
 
   try {
     const encodedPrompt = encodeURIComponent(prompt);
-    const url = `https://text.pollinations.ai/${encodedPrompt}?json=true&model=openai&seed=${Math.floor(Math.random() * 100000)}`;
+    const url = `https://text.pollinations.ai/${encodedPrompt}?json=true&seed=${Math.floor(Math.random() * 1000000)}`;
 
     const response = await fetch(url, {
       signal: controller.signal,
@@ -45,28 +42,45 @@ Ne mets aucun texte avant ou après le tableau JSON, pas d'explication.`;
       cleanedJson = cleanedJson.replace(/```(?:json)?([\s\S]*?)```/g, '$1').trim();
     }
 
-    // Extraction du tableau JSON si du texte superflu entoure la réponse
-    const firstBracket = cleanedJson.indexOf('[');
-    const lastBracket = cleanedJson.lastIndexOf(']');
-    if (firstBracket !== -1 && lastBracket !== -1 && lastBracket > firstBracket) {
-      cleanedJson = cleanedJson.substring(firstBracket, lastBracket + 1);
+    let parsed = null;
+    try {
+      parsed = JSON.parse(cleanedJson);
+    } catch {
+      const firstBracket = cleanedJson.indexOf('[');
+      const lastBracket = cleanedJson.lastIndexOf(']');
+      if (firstBracket !== -1 && lastBracket !== -1 && lastBracket > firstBracket) {
+        try {
+          parsed = JSON.parse(cleanedJson.substring(firstBracket, lastBracket + 1));
+        } catch (e) {
+          console.warn("Échec parsing extrait JSON:", e);
+        }
+      }
     }
 
-    const parsed = JSON.parse(cleanedJson);
-    if (!Array.isArray(parsed) || parsed.length === 0) return null;
+    // Récupération de la liste (que ce soit un tableau direct ou contenu dans une clé d'objet)
+    let rawList = [];
+    if (Array.isArray(parsed)) {
+      rawList = parsed;
+    } else if (parsed && typeof parsed === 'object') {
+      const foundArray = Object.values(parsed).find(Array.isArray);
+      if (foundArray) rawList = foundArray;
+    }
 
-    // Filtrage et validation des données reçues
-    const validTracks = parsed
-      .filter(item => item && item.title && item.artist)
+    if (rawList.length === 0) return null;
+
+    // Filtrage et validation des données reçues (support des clés françaises et anglaises)
+    const validTracks = rawList
+      .filter(item => item && (item.title || item.titre || item.titreFrançais || item.track) && (item.artist || item.artiste || item.author || item.singer))
       .map(item => ({
-        title: String(item.title).trim(),
-        artist: String(item.artist).trim()
-      }));
+        title: String(item.title || item.titre || item.titreFrançais || item.track).trim(),
+        artist: String(item.artist || item.artiste || item.author || item.singer).trim()
+      }))
+      .filter(item => item.title.length > 1 && item.artist.length > 1);
 
     return validTracks.length > 0 ? validTracks : null;
   } catch (err) {
     clearTimeout(timeoutId);
-    console.warn('Erreur ou timeout lors de l\'appel à l\'IA:', err.name === 'AbortError' ? 'Délai d\'attente dépassé (timeout)' : err.message);
+    console.warn('Erreur ou timeout lors de l\'appel à l\'IA:', err.name === 'AbortError' ? 'Délai d\'attente dépassé (timeout 12s)' : err.message);
     return null;
   }
 }

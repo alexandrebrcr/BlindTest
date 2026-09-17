@@ -429,8 +429,6 @@
 
 /* Écran Buzzer Mobile du Joueur */
 .client-buzzer-screen {
-  flex: 1;
-  display: flex;
   flex-direction: column;
   justify-content: space-between;
   padding: 1rem 0;
