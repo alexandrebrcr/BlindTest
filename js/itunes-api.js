@@ -1,5 +1,5 @@
-﻿// Gestionnaire de l'API iTunes Search (CORS natif, previews 30s et pochettes HD)
-import { generateTracksFromAI, getGeminiApiKey, getCustomProxyUrl } from './ai-generator.js';
+// Gestionnaire de l'API iTunes Search (CORS natif, previews 30s et pochettes HD)
+import { generateTracksFromAI, getGeminiApiKey } from './ai-generator.js';
 
 const cache = new Map();
 
@@ -23,27 +23,35 @@ export function extractMovieName(rawTitle, collectionName) {
     }
     const simpleMatch = rawTitle.match(/\((?:de|from|du film)\s+([^)]+)\)/i);
     if (simpleMatch && simpleMatch[1]) {
-      return simpleMatch[1].replace(/bande originale.*|soundtrack.*|original soundtrack.*/i, '').trim();
+      return simpleMatch[1].trim();
     }
   }
 
-  // 2. Chercher dans le nom de l'album (collectionName)
+  // 2. Chercher dans le nom de l'album / collection
   if (collectionName) {
-    let cleaned = collectionName
-      .replace(/\s*\(.*?(bande originale|b\.o\.|soundtrack|ost|edition|version|de\s+la|du\s+film).*?\)/gi, '')
-      .replace(/\s*\[.*?\]/gi, '')
-      .replace(/\s*-\s*(bande originale|soundtrack|ost|original score).*/gi, '')
-      .replace(/:\s*(original soundtrack|soundtrack|bande originale).*/gi, '')
-      .trim();
-    if (cleaned.length >= 2 && !/greatest hits|best of|anthology|compilation/i.test(cleaned)) {
-      return cleaned;
+    const ostMatch = collectionName.match(/(.+?)\s*(?:\(original soundtrack|\(b\.o\.|\(soundtrack|\(bande originale|original score|ost\))/i);
+    if (ostMatch && ostMatch[1]) {
+      return ostMatch[1].trim();
+    }
+    if (collectionName.toLowerCase().includes('soundtrack') || collectionName.toLowerCase().includes('bande originale')) {
+      return collectionName.replace(/\s*\(.*?\)/g, '').replace(/\s*-.*$/, '').trim();
     }
   }
 
   return null;
 }
 
-// Extraction de la clé canonique pour comparaison stricte et anti-doublons
+// Fonction de mélange de tableau (Fisher-Yates)
+export function shuffleArray(array) {
+  const arr = [...array];
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+// Nettoyage canonique d'un titre pour comparaison robuste
 export function canonicalKey(str) {
   if (!str) return '';
   return str
@@ -98,7 +106,7 @@ export async function searchTrack(query, country = 'FR', movieHint = null) {
   }
 
   const encodedQuery = encodeURIComponent(query);
-  const url = `https://itunes.apple.com/search?term=${encodedQuery}&country=${country}&entity=song&limit=10`;
+  const url = `https://itunes.apple.com/search?term=${encodedQuery}&country=${country}&entity=song&limit=12`;
 
   try {
     const response = await fetch(url);
@@ -119,57 +127,76 @@ export async function searchTrack(query, country = 'FR', movieHint = null) {
           album: item.collectionName || '',
           movieTitle: extractedMovie || null,
           year: getYear(item.releaseDate),
-          genre: item.primaryGenreName,
+          genre: item.primaryGenreName || '',
           previewUrl: item.previewUrl,
-          artworkUrl: artworkHd
+          artworkUrl: artworkHd,
+          country: country
         };
-      });
+      })
+      .filter(item => item.title.length > 0 && item.artist.length > 0);
 
-    cache.set(cacheKey, validTracks);
-    return validTracks;
+    // Déduplication locale par canonicalKey
+    const seen = new Set();
+    const unique = [];
+    for (const t of validTracks) {
+      const key = canonicalKey(t.title);
+      if (!seen.has(key)) {
+        seen.add(key);
+        unique.push(t);
+      }
+    }
+
+    cache.set(cacheKey, unique);
+    return unique;
   } catch (err) {
-    console.warn(`Erreur lors de la recherche iTunes pour "${query}":`, err);
+    console.warn(`Erreur recherche iTunes pour "${query}":`, err);
     return [];
   }
 }
 
-// Mélange d'un tableau (Fisher-Yates)
-export function shuffleArray(arr) {
-  const copy = [...arr];
-  for (let i = copy.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [copy[i], copy[j]] = [copy[j], copy[i]];
-  }
-  return copy;
-}
-
-// Générateur musical intelligent pour Thème Libre (100% autonome, 0 clé API nécessaire)
+// Générateur musical intelligent pour Thème Libre (100% autonome, 0 clé API requise)
 export function getSmartThemeQueries(theme) {
   if (!theme || typeof theme !== 'string') return [];
   const lower = theme.toLowerCase().trim();
   const queries = [];
 
-  // 1. Thématiques et univers cultes
+  // 1. Thématiques, genres et univers cultes enrichis
   if (lower.includes('manga') || lower.includes('anime') || lower.includes('animé') || lower.includes('japon')) {
-    queries.push('generique dessin anime', 'manga opening', 'naruto opening', 'dragon ball z', 'one piece we are', 'japanimation');
+    queries.push('generique dessin anime', 'manga opening', 'naruto opening', 'dragon ball z', 'one piece we are', 'japanimation', 'snk opening', 'death note theme');
   } else if (lower.includes('dessin') || lower.includes('enfance') || lower.includes('cartoon')) {
-    queries.push('generique dessin anime', 'les mysterieuses cites dor', 'inspecteur gadget', 'pokemon generique', 'goldorak', 'capitaine flam');
-  } else if (lower.includes('disney')) {
-    queries.push('disney le roi lion', 'disney aladdin', 'disney la reine des neiges', 'disney hercule', 'disney tarzan', 'disney vaiana');
+    queries.push('generique dessin anime', 'les mysterieuses cites dor', 'inspecteur gadget', 'pokemon generique', 'goldorak', 'capitaine flam', 'tortues ninja', 'olive et tom');
+  } else if (lower.includes('disney') || lower.includes('pixar')) {
+    queries.push('disney le roi lion', 'disney aladdin', 'disney la reine des neiges', 'disney hercule', 'disney tarzan', 'disney vaiana', 'disney mulan', 'disney livre de la jungle');
   } else if (lower.includes('film') || lower.includes('cinema') || lower.includes('cinéma') || lower.includes('serie') || lower.includes('série') || lower.includes('b.o.')) {
-    queries.push('star wars john williams', 'pirates of the caribbean', 'game of thrones theme', 'harry potter hedwig', 'gladiator hans zimmer', 'titanic celine dion');
+    queries.push('star wars john williams', 'pirates of the caribbean', 'game of thrones theme', 'harry potter hedwig', 'gladiator hans zimmer', 'titanic celine dion', 'pulp fiction', 'mission impossible theme');
+  } else if (lower.includes('jeu') || lower.includes('gaming') || lower.includes('zelda') || lower.includes('mario')) {
+    queries.push('super mario bros theme', 'zelda main theme', 'pokemon red blue', 'tetris theme', 'final fantasy victory fanfare', 'halo theme song', 'skyrim theme');
   } else if (lower.includes('prenom') || lower.includes('prénom')) {
-    queries.push('aline christophe', 'caroline mc solaar', 'roxanne the police', 'billie jean michael jackson', 'angie rolling stones', 'laura johnny hallyday');
-  } else if (lower.includes('ete') || lower.includes('été') || lower.includes('soleil') || lower.includes('plage')) {
-    queries.push('tube ete', 'hit ete', 'macarena', 'lambada', 'despacito', 'soco bate vira', 'asereje');
+    queries.push('aline christophe', 'caroline mc solaar', 'roxanne the police', 'billie jean michael jackson', 'angie rolling stones', 'laura johnny hallyday', 'sarah georges moustaki');
+  } else if (lower.includes('ete') || lower.includes('été') || lower.includes('soleil') || lower.includes('plage') || lower.includes('vacance')) {
+    queries.push('tube ete', 'hit ete', 'macarena los del rio', 'lambada kaoma', 'despacito luis fonsi', 'soco bate vira', 'asereje las ketchup', 'danza kuduro don omar');
   } else if (lower.includes('amour') || lower.includes('love') || lower.includes('romantique') || lower.includes('rupture')) {
-    queries.push('chanson damour', 'ne me quitte pas', 'my heart will go on', 'all of me john legend', 'je laime a mourir', 'i will always love you');
-  } else if (lower.includes('rock')) {
-    queries.push('rock classics', 'queen', 'ac dc', 'nirvana', 'the beatles', 'rolling stones');
-  } else if (lower.includes('rap')) {
-    queries.push('rap francais', 'jul', 'booba', 'eminem', 'iam le mia', 'suprême ntm');
-  } else if (lower.includes('electro') || lower.includes('techno') || lower.includes('dance')) {
-    queries.push('daft punk one more time', 'david guetta titanium', 'avicii wake me up', 'calvin harris');
+    queries.push('chanson damour', 'ne me quitte pas jacques brel', 'my heart will go on celine dion', 'all of me john legend', 'je laime a mourir francis cabrel', 'i will always love you whitney houston');
+  } else if (lower.includes('rock') || lower.includes('metal') || lower.includes('hard rock') || lower.includes('punk')) {
+    queries.push('queen bohemian rhapsody', 'ac dc highway to hell', 'nirvana smells like teen spirit', 'the beatles let it be', 'rolling stones paint it black', 'metallica enter sandman', 'guns n roses sweet child');
+  } else if (lower.includes('rap francais') || lower.includes('rap fr')) {
+    queries.push('jul bande organisee', 'iam le mia', 'supreme ntm seine saint denis', 'orelsan la terre est ronde', 'booba dkr', 'pnl au dd', 'ninho lettre a une femme', 'damso macarena');
+  } else if (lower.includes('rap') || lower.includes('hip hop')) {
+    queries.push('eminem lose yourself', 'tupac california love', 'coolio gangsta paradise', 'dr dre still dre', '50 cent in da club', 'notorious big juicy');
+  } else if (lower.includes('electro') || lower.includes('techno') || lower.includes('dance') || lower.includes('house') || lower.includes('club')) {
+    queries.push('daft punk one more time', 'david guetta titanium', 'avicii wake me up', 'calvin harris summer', 'gala freed from desire', 'swedish house mafia don t you worry');
+  } else if (lower.includes('80') || lower.includes('eighties') || lower.includes('disco')) {
+    queries.push('michael jackson billie jean', 'madonna like a virgin', 'indochine l aventurier', 'a-ha take on me', 'eurythmics sweet dreams', 'wham wake me up', 'rick astley never gonna give you up');
+  } else if (lower.includes('90') || lower.includes('nineties')) {
+    queries.push('britney spears baby one more time', 'backstreet boys everybody', 'aqua barbie girl', 'louis attaque j t emmene au vent', 'manau la tribu de dana', 'gala freed from desire');
+  } else if (lower.includes('2000')) {
+    queries.push('black eyed peas i gotta feeling', 'rihanna umbrella', 'beyonce crazy in love', 'kyo derniere danse', 'diams la boulette', 'shakira whenever wherever');
+  } else if (lower.includes('variete') || lower.includes('francais') || lower.includes('francaise')) {
+    queries.push('jean-jacques goldman encore un matin', 'michel sardou les lacs du connemara', 'daniel balavoine tous les cris les sos', 'johnny hallyday allumer le feu', 'celine dion pour que tu m aimes encore');
+  } else if (lower.includes('kpop') || lower.includes('k-pop')) {
+    queries.push('bts dynamite', 'blackpink ddu du ddu du', 'psy gangnam style', 'twice the feels', 'stray kids god s menu');
+  } else if (lower.includes('latino') || lower.includes('reggaeton') || lower.includes('salsa')) {
+    queries.push('despacito luis fonsi', 'danza kuduro don omar', 'gasolina daddy yankee', 'bailando enrique iglesias', 'la camisa negra juanes');
   }
 
   // 2. Recherche avec le texte exact
@@ -179,7 +206,7 @@ export function getSmartThemeQueries(theme) {
   queries.push(`${theme} best of`);
 
   // 3. Découpage en mots-clés
-  const stopWords = new Set(['des', 'les', 'une', 'qui', 'avec', 'dans', 'pour', 'chansons', 'morceaux', 'musique', 'titres', 'tubes']);
+  const stopWords = new Set(['des', 'les', 'une', 'qui', 'avec', 'dans', 'pour', 'chansons', 'morceaux', 'musique', 'titres', 'tubes', 'meilleurs', 'top']);
   const words = theme
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
@@ -197,11 +224,75 @@ export function getSmartThemeQueries(theme) {
   return [...new Set(queries)];
 }
 
+// Vaste vivier universel de secours (60 classiques cultes multi-genres)
+// Utilisé uniquement si le vivier de leurres s'épuise complètement sur de très longues parties
+const EXTENDED_UNIVERSAL_DECOYS = [
+  { title: 'One More Time', artist: 'Daft Punk' },
+  { title: 'Bohemian Rhapsody', artist: 'Queen' },
+  { title: 'Billie Jean', artist: 'Michael Jackson' },
+  { title: 'Shape of You', artist: 'Ed Sheeran' },
+  { title: 'La terre est ronde', artist: 'Orelsan' },
+  { title: 'L\'Aventurier', artist: 'Indochine' },
+  { title: 'Hakuna Matata', artist: 'Le Roi Lion' },
+  { title: 'Ce rêve bleu', artist: 'Aladdin' },
+  { title: 'Get Lucky', artist: 'Daft Punk' },
+  { title: 'Tous les mêmes', artist: 'Stromae' },
+  { title: 'Smells Like Teen Spirit', artist: 'Nirvana' },
+  { title: 'Highway to Hell', artist: 'AC/DC' },
+  { title: 'Stayin\' Alive', artist: 'Bee Gees' },
+  { title: 'Lose Yourself', artist: 'Eminem' },
+  { title: 'Blinding Lights', artist: 'The Weeknd' },
+  { title: 'Rolling in the Deep', artist: 'Adele' },
+  { title: 'Uptown Funk', artist: 'Bruno Mars' },
+  { title: 'Dancing Queen', artist: 'ABBA' },
+  { title: 'Bad Romance', artist: 'Lady Gaga' },
+  { title: 'Wake Me Up', artist: 'Avicii' },
+  { title: 'Balance ton quoi', artist: 'Angèle' },
+  { title: 'Titanium', artist: 'David Guetta & Sia' },
+  { title: 'Happy', artist: 'Pharrell Williams' },
+  { title: 'Allumer le feu', artist: 'Johnny Hallyday' },
+  { title: 'Les Lacs du Connemara', artist: 'Michel Sardou' },
+  { title: 'Encore un matin', artist: 'Jean-Jacques Goldman' },
+  { title: 'Pour que tu m\'aimes encore', artist: 'Céline Dion' },
+  { title: 'La Tribu de Dana', artist: 'Manau' },
+  { title: 'Dernière danse', artist: 'Kyo' },
+  { title: 'La Boulette', artist: 'Diam\'s' },
+  { title: 'Je danse le Mia', artist: 'IAM' },
+  { title: 'Seine Saint-Denis Style', artist: 'Suprême NTM' },
+  { title: 'Bande organisée', artist: '13 Organisé' },
+  { title: 'Au DD', artist: 'PNL' },
+  { title: 'Lettre à une femme', artist: 'Ninho' },
+  { title: 'In the End', artist: 'Linkin Park' },
+  { title: 'Wonderwall', artist: 'Oasis' },
+  { title: 'Zombie', artist: 'The Cranberries' },
+  { title: 'Sweet Child O\' Mine', artist: 'Guns N\' Roses' },
+  { title: 'Seven Nation Army', artist: 'The White Stripes' },
+  { title: 'Take On Me', artist: 'A-ha' },
+  { title: 'Sweet Dreams', artist: 'Eurythmics' },
+  { title: 'Les Démons de minuit', artist: 'Émile et Images' },
+  { title: 'Nuit de folie', artist: 'Début de Soirée' },
+  { title: 'Voyage Voyage', artist: 'Desireless' },
+  { title: '...Baby One More Time', artist: 'Britney Spears' },
+  { title: 'Crazy in Love', artist: 'Beyoncé' },
+  { title: 'Umbrella', artist: 'Rihanna' },
+  { title: 'I Gotta Feeling', artist: 'Black Eyed Peas' },
+  { title: 'Libérée, Délivrée', artist: 'La Reine des Neiges' },
+  { title: 'L\'Histoire de la vie', artist: 'Le Roi Lion' },
+  { title: 'Il en faut peu pour être heureux', artist: 'Le Livre de la Jungle' },
+  { title: 'Sous l\'océan', artist: 'La Petite Sirène' },
+  { title: 'Eye of the Tiger', artist: 'Survivor' },
+  { title: 'Gangsta\'s Paradise', artist: 'Coolio' },
+  { title: 'Despacito', artist: 'Luis Fonsi' },
+  { title: 'Danza Kuduro', artist: 'Don Omar' },
+  { title: 'Californication', artist: 'Red Hot Chili Peppers' }
+];
+
 // Préparer une sélection de morceaux pour une partie complète
 export async function preparePlaylist(category, trackCount = 10, onProgress = null, customPrompt = null) {
   const pool = [];
   const seenKeys = new Set();
   const allFetchedForDecoys = [];
+  let aiDecoys = [];
 
   function addTrackToPool(track) {
     if (!track || !track.title || !track.artist) return false;
@@ -222,42 +313,47 @@ export async function preparePlaylist(category, trackCount = 10, onProgress = nu
   const isCustom = category.isCustom || !!customPrompt;
   const themeToAsk = customPrompt || category.aiTheme || category.name;
   const hasGeminiKey = !!getGeminiApiKey();
-  const hasProxy = !!getCustomProxyUrl();
 
-  // On lance l'IA si c'est un thème libre OU si l'utilisateur a configuré Gemini/proxy pour les thèmes standards
-  const shouldInvokeAI = isCustom || hasGeminiKey || hasProxy;
+  // On lance l'IA si c'est un thème libre OU si l'utilisateur a configuré Gemini pour les thèmes standards
+  const shouldInvokeAI = isCustom || hasGeminiKey;
 
-  // 1. APPEL IA UNIQUEMENT SI CLÉ OU PROXY PRÉSENT
-  if (hasGeminiKey || hasProxy) {
+  // 1. APPEL IA (Google Gemini si configuré, sinon service public sans clé)
+  if (shouldInvokeAI) {
     if (onProgress) {
-      const aiProviderName = hasGeminiKey ? "Google Gemini 2.0" : "l'IA";
+      const aiProviderName = hasGeminiKey ? "Google Gemini 2.0" : "L'IA musicale";
       onProgress(20, `${aiProviderName} compose votre sélection sur-mesure...`);
     }
 
     const safetyBuffer = trackCount <= 5 ? 2 : 4;
-    const aiTracks = await generateTracksFromAI(themeToAsk, trackCount + safetyBuffer);
+    const aiResult = await generateTracksFromAI(themeToAsk, trackCount + safetyBuffer);
 
-    if (aiTracks && aiTracks.length > 0) {
-      if (onProgress) onProgress(50, "Extraction des extraits audio iTunes...");
-      let processed = 0;
+    if (aiResult) {
+      const aiTracks = Array.isArray(aiResult) ? aiResult : (aiResult.tracks || []);
+      aiDecoys = Array.isArray(aiResult.decoys) ? aiResult.decoys : [];
 
-      for (const item of aiTracks) {
-        const query = `${item.artist} ${item.title}`;
-        const results = await searchTrack(query, category.country || 'FR', item.movie || null);
-        for (const track of results) {
-          if (item.movie && !track.movieTitle) {
-            track.movieTitle = item.movie;
+      if (aiTracks.length > 0) {
+        if (onProgress) onProgress(50, "Extraction des extraits audio iTunes...");
+        let processed = 0;
+
+        for (const item of aiTracks) {
+          const query = `${item.artist} ${item.title}`;
+          const results = await searchTrack(query, category.country || 'FR', item.movie || null);
+
+          // Verser TOUTES les trouvailles de cette recherche dans le vivier de leurres
+          for (const track of results) {
+            allFetchedForDecoys.push(track);
+            if (item.movie && !track.movieTitle) {
+              track.movieTitle = item.movie;
+            }
+            addTrackToPool(track);
           }
-          allFetchedForDecoys.push(track);
-          if (addTrackToPool(track)) {
-            break;
+
+          processed++;
+          if (onProgress) {
+            onProgress(Math.min(90, 50 + Math.round((processed / aiTracks.length) * 40)));
           }
+          if (pool.length >= trackCount + safetyBuffer) break;
         }
-        processed++;
-        if (onProgress) {
-          onProgress(Math.min(90, 50 + Math.round((processed / aiTracks.length) * 40)));
-        }
-        if (pool.length >= trackCount + safetyBuffer) break;
       }
     }
   }
@@ -274,9 +370,14 @@ export async function preparePlaylist(category, trackCount = 10, onProgress = nu
 
     for (const q of shuffledQueries) {
       const results = await searchTrack(q, category.country || 'FR');
+
+      // On conserve TOUS les résultats pour un vivier de leurres immense et authentique
+      for (const track of results) {
+        allFetchedForDecoys.push(track);
+      }
+
       const shuffledResults = shuffleArray(results);
       for (const track of shuffledResults) {
-        allFetchedForDecoys.push(track);
         if (addTrackToPool(track)) {
           break;
         }
@@ -291,8 +392,13 @@ export async function preparePlaylist(category, trackCount = 10, onProgress = nu
   // 3. GÉNÉRATION DES LEURRES POUR LE MODE QCM (SANS AUCUN DOUBLON SUR TOUTE LA SESSION)
   const categoryDecoys = category.decoys || [];
   const globalDecoys = [
+    // Priorité 1 : les leurres thématiques ciblés générés par l'IA
+    ...aiDecoys.map(d => ({ title: d.title, artist: d.artist, movieTitle: d.movie || null })),
+    // Priorité 2 : les alternatives réelles issues des recherches iTunes
     ...allFetchedForDecoys,
+    // Priorité 3 : les morceaux alternatifs du pool
     ...pool,
+    // Priorité 4 : les leurres prédéfinis de la catégorie
     ...categoryDecoys.map(d => ({ title: d.title, artist: d.artist, movieTitle: d.movie || null }))
   ];
 
@@ -351,22 +457,9 @@ export async function preparePlaylist(category, trackCount = 10, onProgress = nu
       }
     }
 
-    // 3ème passe : si le vivier est encore insuffisant, puiser dans les classiques universels
+    // 3ème passe : si le vivier est encore insuffisant, puiser dans les 60 classiques universels variés
     if (chosenDecoys.length < 3) {
-      const universalDecoys = [
-        { title: 'One More Time', artist: 'Daft Punk' },
-        { title: 'Bohemian Rhapsody', artist: 'Queen' },
-        { title: 'Billie Jean', artist: 'Michael Jackson' },
-        { title: 'Shape of You', artist: 'Ed Sheeran' },
-        { title: 'La terre est ronde', artist: 'Orelsan' },
-        { title: 'L\'Aventurier', artist: 'Indochine' },
-        { title: 'Hakuna Matata', artist: 'Le Roi Lion' },
-        { title: 'Ce rêve bleu', artist: 'Aladdin' },
-        { title: 'Get Lucky', artist: 'Daft Punk' },
-        { title: 'Tous les mêmes', artist: 'Stromae' }
-      ];
-
-      for (const u of shuffleArray(universalDecoys)) {
+      for (const u of shuffleArray(EXTENDED_UNIVERSAL_DECOYS)) {
         const uKey = canonicalKey(u.title);
         if (!sessionUsedDecoyKeys.has(uKey) && !areTitlesEquivalent(u.title, track.title)) {
           sessionUsedDecoyKeys.add(uKey);

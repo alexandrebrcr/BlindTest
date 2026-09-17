@@ -1,4 +1,4 @@
-﻿// Définition des catégories de Blind Test et de leurs morceaux/artistes cultes
+// Définition des catégories de Blind Test et de leurs morceaux/artistes cultes
 
 export const CATEGORIES = [
   {
@@ -36,7 +36,33 @@ export const CATEGORIES = [
       { title: 'Can\'t Stop the Feeling!', artist: 'Justin Timberlake' },
       { title: 'Titanium', artist: 'David Guetta & Sia' },
       { title: 'Happy', artist: 'Pharrell Williams' },
-      { title: 'Locked Out of Heaven', artist: 'Bruno Mars' }
+      { title: 'Locked Out of Heaven', artist: 'Bruno Mars' },
+      { title: 'Smells Like Teen Spirit', artist: 'Nirvana' },
+      { title: 'Highway to Hell', artist: 'AC/DC' },
+      { title: 'Allumer le feu', artist: 'Johnny Hallyday' },
+      { title: 'Les Lacs du Connemara', artist: 'Michel Sardou' },
+      { title: 'La Tribu de Dana', artist: 'Manau' },
+      { title: 'Dernière danse', artist: 'Kyo' },
+      { title: 'La Boulette', artist: 'Diam\'s' },
+      { title: 'Je danse le Mia', artist: 'IAM' },
+      { title: 'Bande organisée', artist: '13 Organisé' },
+      { title: 'Au DD', artist: 'PNL' },
+      { title: 'In the End', artist: 'Linkin Park' },
+      { title: 'Wonderwall', artist: 'Oasis' },
+      { title: 'Take On Me', artist: 'A-ha' },
+      { title: 'Sweet Dreams', artist: 'Eurythmics' },
+      { title: '...Baby One More Time', artist: 'Britney Spears' },
+      { title: 'Crazy in Love', artist: 'Beyoncé' },
+      { title: 'Umbrella', artist: 'Rihanna' },
+      { title: 'I Gotta Feeling', artist: 'Black Eyed Peas' },
+      { title: 'Hakuna Matata', artist: 'Le Roi Lion' },
+      { title: 'Ce rêve bleu', artist: 'Aladdin' },
+      { title: 'Libérée, Délivrée', artist: 'La Reine des Neiges' },
+      { title: 'Despacito', artist: 'Luis Fonsi' },
+      { title: 'Danza Kuduro', artist: 'Don Omar' },
+      { title: 'Californication', artist: 'Red Hot Chili Peppers' },
+      { title: 'Zombie', artist: 'The Cranberries' },
+      { title: 'Seven Nation Army', artist: 'The White Stripes' }
     ]
   },
   {

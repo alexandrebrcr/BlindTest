@@ -6,7 +6,7 @@ import { sfx } from './sfx.js';
 import { gameEngine } from './game-engine.js';
 import { buzzerEngine } from './buzzer-engine.js';
 import { roomHost, roomClient, PLAYER_COLORS } from './room-peer.js';
-import { getGeminiApiKey, setGeminiApiKey, getCustomProxyUrl, setCustomProxyUrl, testGeminiApiKey } from './ai-generator.js';
+import { getGeminiApiKey, setGeminiApiKey, testGeminiApiKey } from './ai-generator.js';
 
 // État Global de l'Application
 const state = {
@@ -71,7 +71,6 @@ function initAiSettings() {
   const modalAi = document.getElementById('modal-ai-settings');
   const btnClose = document.getElementById('btn-close-ai-modal');
   const inputKey = document.getElementById('input-gemini-key');
-  const inputProxy = document.getElementById('input-custom-proxy');
   const btnToggleEye = document.getElementById('btn-toggle-key-visibility');
   const btnTest = document.getElementById('btn-test-gemini-key');
   const btnClear = document.getElementById('btn-clear-gemini-key');
@@ -81,16 +80,12 @@ function initAiSettings() {
   const updateStatus = () => {
     if (!statusEl) return;
     const key = getGeminiApiKey();
-    const proxy = getCustomProxyUrl();
     if (key) {
       statusEl.className = 'ai-key-status success';
       statusEl.textContent = '✅ Clé Google Gemini active (génération < 1s)';
-    } else if (proxy) {
-      statusEl.className = 'ai-key-status success';
-      statusEl.textContent = '✅ Proxy Cloudflare Worker actif';
     } else {
       statusEl.className = 'ai-key-status';
-      statusEl.textContent = 'ℹ️ Aucune clé enregistrée (mode gratuit standard)';
+      statusEl.textContent = 'ℹ️ Aucune clé (mode IA gratuit automatique activé)';
     }
   };
 
@@ -100,7 +95,6 @@ function initAiSettings() {
       modalAi.style.display = 'flex';
     }
     if (inputKey) inputKey.value = getGeminiApiKey();
-    if (inputProxy) inputProxy.value = getCustomProxyUrl();
     updateStatus();
   };
 
@@ -168,9 +162,7 @@ function initAiSettings() {
   if (btnClear && inputKey) {
     btnClear.addEventListener('click', () => {
       inputKey.value = '';
-      if (inputProxy) inputProxy.value = '';
       setGeminiApiKey('');
-      setCustomProxyUrl('');
       updateStatus();
     });
   }
@@ -178,7 +170,6 @@ function initAiSettings() {
   if (btnSave) {
     btnSave.addEventListener('click', () => {
       if (inputKey) setGeminiApiKey(inputKey.value);
-      if (inputProxy) setCustomProxyUrl(inputProxy.value);
       closeAiModal();
     });
   }

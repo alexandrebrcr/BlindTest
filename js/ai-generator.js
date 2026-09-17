@@ -1,9 +1,8 @@
-﻿// Module Générateur Musical par IA
-// Supporte Google Gemini API (clé stockée localement dans le navigateur, jamais dans Git)
-// Supporte également un proxy Cloudflare Worker ou le fallback gratuit à timeout court
+// Module Générateur Musical par IA
+// Supporte Google Gemini API (clé gratuite stockée localement dans le navigateur)
+// Supporte également le fallback IA public gratuit sans clé pour jouer entre amis
 
 export const GEMINI_STORAGE_KEY = 'blindtest_gemini_api_key';
-export const PROXY_STORAGE_KEY = 'blindtest_ai_proxy_url';
 
 export function getGeminiApiKey() {
   return (localStorage.getItem(GEMINI_STORAGE_KEY) || '').trim();
@@ -17,18 +16,6 @@ export function setGeminiApiKey(key) {
   }
 }
 
-export function getCustomProxyUrl() {
-  return (localStorage.getItem(PROXY_STORAGE_KEY) || '').trim();
-}
-
-export function setCustomProxyUrl(url) {
-  if (!url) {
-    localStorage.removeItem(PROXY_STORAGE_KEY);
-  } else {
-    localStorage.setItem(PROXY_STORAGE_KEY, url.trim().replace(/\/+$/, ''));
-  }
-}
-
 // Test rapide de la clé Gemini
 export async function testGeminiApiKey(key) {
   const cleanKey = (key || '').trim();
@@ -36,7 +23,7 @@ export async function testGeminiApiKey(key) {
     return { success: false, message: 'Veuillez saisir une clé API.' };
   }
 
-  const testPrompt = 'Retourne uniquement ce JSON strict : [{"title":"Test","artist":"Test"}]';
+  const testPrompt = 'Retourne uniquement ce JSON strict : {"tracks":[{"title":"Test","artist":"Test"}]}';
   const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${encodeURIComponent(cleanKey)}`;
 
   const controller = new AbortController();
@@ -76,13 +63,83 @@ export async function testGeminiApiKey(key) {
   }
 }
 
+// Nettoyage et normalisation d'une liste de pistes
+function sanitizeTrackItems(list) {
+  if (!Array.isArray(list)) return [];
+  return list
+    .filter(item => item && (item.title || item.titre || item.track) && (item.artist || item.artiste || item.author || item.singer))
+    .map(item => ({
+      title: String(item.title || item.titre || item.track).trim(),
+      artist: String(item.artist || item.artiste || item.author || item.singer).trim(),
+      movie: item.movie || item.film || item.serie || item.show || null
+    }))
+    .filter(item => item.title.length > 1 && item.artist.length > 1);
+}
+
+// Extraction et nettoyage des pistes et leurres JSON
+function parseAiResponse(rawText) {
+  if (!rawText || rawText.trim().length === 0) return null;
+
+  let cleaned = rawText.trim();
+  if (cleaned.includes('```')) {
+    cleaned = cleaned.replace(/```(?:json)?([\s\S]*?)```/g, '$1').trim();
+  }
+
+  let parsed = null;
+  try {
+    parsed = JSON.parse(cleaned);
+  } catch {
+    const firstBrace = cleaned.indexOf('{');
+    const lastBrace = cleaned.lastIndexOf('}');
+    if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+      try {
+        parsed = JSON.parse(cleaned.substring(firstBrace, lastBrace + 1));
+      } catch {
+        // Essai avec crochet pour tableau direct
+        const firstBracket = cleaned.indexOf('[');
+        const lastBracket = cleaned.lastIndexOf(']');
+        if (firstBracket !== -1 && lastBracket !== -1 && lastBracket > firstBracket) {
+          try {
+            parsed = JSON.parse(cleaned.substring(firstBracket, lastBracket + 1));
+          } catch (e) {
+            console.warn('Échec parsing JSON partiel:', e);
+          }
+        }
+      }
+    }
+  }
+
+  if (!parsed) return null;
+
+  let tracks = [];
+  let decoys = [];
+
+  if (Array.isArray(parsed)) {
+    tracks = sanitizeTrackItems(parsed);
+  } else if (typeof parsed === 'object') {
+    const rawTracks = parsed.tracks || parsed.chansons || parsed.morceaux || parsed.songs || [];
+    const rawDecoys = parsed.decoys || parsed.leurres || parsed.fausses_reponses || parsed.fakes || [];
+
+    tracks = sanitizeTrackItems(Array.isArray(rawTracks) ? rawTracks : []);
+    decoys = sanitizeTrackItems(Array.isArray(rawDecoys) ? rawDecoys : []);
+
+    // Si tracks est vide mais qu'un autre tableau existe
+    if (tracks.length === 0) {
+      const foundArray = Object.values(parsed).find(Array.isArray);
+      if (foundArray) tracks = sanitizeTrackItems(foundArray);
+    }
+  }
+
+  return (tracks.length > 0) ? { tracks, decoys } : null;
+}
+
 // Appel direct à Google Gemini REST API
-async function fetchFromGemini(apiKey, prompt, count) {
+async function fetchFromGemini(apiKey, prompt) {
   const models = ['gemini-2.0-flash', 'gemini-1.5-flash'];
 
   for (const model of models) {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 8000);
+    const timeoutId = setTimeout(() => controller.abort(), 9000);
 
     try {
       const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`;
@@ -110,48 +167,23 @@ async function fetchFromGemini(apiKey, prompt, count) {
       const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
       if (!rawText) continue;
 
-      const tracks = parseJsonTrackList(rawText);
-      if (tracks && tracks.length > 0) {
-        return tracks;
+      const result = parseAiResponse(rawText);
+      if (result && result.tracks.length > 0) {
+        return result;
       }
     } catch (err) {
       clearTimeout(timeoutId);
-      console.warn(`Erreur appel Gemini (${model}):`, err.name === 'AbortError' ? 'Timeout 8s' : err.message);
+      console.warn(`Erreur appel Gemini (${model}):`, err.name === 'AbortError' ? 'Timeout 9s' : err.message);
     }
   }
 
   return null;
 }
 
-// Appel via proxy personnalisé (Cloudflare Worker)
-async function fetchFromProxy(proxyUrl, prompt) {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 8000);
-
-  try {
-    const response = await fetch(proxyUrl, {
-      method: 'POST',
-      signal: controller.signal,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt })
-    });
-
-    clearTimeout(timeoutId);
-
-    if (!response.ok) return null;
-    const rawText = await response.text();
-    return parseJsonTrackList(rawText);
-  } catch (err) {
-    clearTimeout(timeoutId);
-    console.warn('Erreur appel proxy IA:', err);
-    return null;
-  }
-}
-
-// Fallback gratuit sans clé (timeout court de 4s pour ne jamais bloquer l'utilisateur)
+// Fallback gratuit sans clé (utilise le service public Pollinations avec timeout de 8s)
 async function fetchFromFreeService(prompt) {
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 4000);
+  const timeoutId = setTimeout(() => controller.abort(), 8000);
 
   try {
     const encodedPrompt = encodeURIComponent(prompt);
@@ -166,92 +198,45 @@ async function fetchFromFreeService(prompt) {
 
     if (!response.ok) return null;
     const rawText = await response.text();
-    return parseJsonTrackList(rawText);
+    return parseAiResponse(rawText);
   } catch (err) {
     clearTimeout(timeoutId);
-    console.info('Service IA gratuit non disponible ou trop lent (timeout 4s) :', err.message);
+    console.info('Service IA gratuit public indisponible ou lent (timeout 8s) :', err.message);
     return null;
   }
 }
 
-// Extraction et nettoyage des pistes JSON
-function parseJsonTrackList(rawText) {
-  if (!rawText || rawText.trim().length === 0) return null;
-
-  let cleaned = rawText.trim();
-  if (cleaned.includes('```')) {
-    cleaned = cleaned.replace(/```(?:json)?([\s\S]*?)```/g, '$1').trim();
-  }
-
-  let parsed = null;
-  try {
-    parsed = JSON.parse(cleaned);
-  } catch {
-    const firstBracket = cleaned.indexOf('[');
-    const lastBracket = cleaned.lastIndexOf(']');
-    if (firstBracket !== -1 && lastBracket !== -1 && lastBracket > firstBracket) {
-      try {
-        parsed = JSON.parse(cleaned.substring(firstBracket, lastBracket + 1));
-      } catch (e) {
-        console.warn('Échec parsing JSON partiel:', e);
-      }
-    }
-  }
-
-  let rawList = [];
-  if (Array.isArray(parsed)) {
-    rawList = parsed;
-  } else if (parsed && typeof parsed === 'object') {
-    const foundArray = Object.values(parsed).find(Array.isArray);
-    if (foundArray) rawList = foundArray;
-  }
-
-  if (!rawList || rawList.length === 0) return null;
-
-  const validTracks = rawList
-    .filter(item => item && (item.title || item.titre || item.track) && (item.artist || item.artiste || item.author || item.singer))
-    .map(item => ({
-      title: String(item.title || item.titre || item.track).trim(),
-      artist: String(item.artist || item.artiste || item.author || item.singer).trim(),
-      movie: item.movie || item.film || item.serie || item.show || null
-    }))
-    .filter(item => item.title.length > 1 && item.artist.length > 1);
-
-  return validTracks.length > 0 ? validTracks : null;
-}
-
-// Fonction principale exportée
+// Fonction principale exportée : Génération des morceaux ET des leurres ciblés
 export async function generateTracksFromAI(themeDescription, count = 10) {
-  const prompt = `Tu es un programmateur musical d'exception pour un jeu de blind test.
-Génère une sélection de ${count} morceaux variés, populaires et immédiatement identifiables pour le thème suivant : "${themeDescription}".
-Règles impératives :
-- Chansons marquantes, cultes ou emblématiques du style/thème, avec un bon mix d'époques et de styles.
-- Si le thème concerne des films, séries, animés ou Disney, inclus si possible le nom du film ou série associé ("movie").
-- Format strict JSON uniquement, aucun blabla :
-[{"title": "Nom du morceau", "artist": "Nom de l'artiste", "movie": "Nom du film ou série si applicable"}]`;
+  const prompt = `Tu es un programmateur musical d'exception pour un jeu de blind test en soirée.
+Génère une sélection de qualité pour le thème : "${themeDescription}".
+
+Consignes :
+1. "tracks" : Exactement ${count} morceaux cultes, immédiatement identifiables, emblématiques du thème (titre et artiste). Si c'est un animé, film ou série, indique le nom dans "movie".
+2. "decoys" : 20 autres morceaux ou artistes très connus du MÊME univers/genre musical pour servir de fausses réponses crédibles (leurres de QCM).
+Format strict JSON uniquement, sans aucun texte autour :
+{
+  "tracks": [
+    {"title": "Titre du morceau", "artist": "Nom de l'artiste", "movie": "Nom film/série si applicable"}
+  ],
+  "decoys": [
+    {"title": "Faux titre crédible", "artist": "Artiste du même style", "movie": "Nom film/série si applicable"}
+  ]
+}`;
 
   // 1. Priorité à la clé Google Gemini si renseignée dans les réglages
   const geminiKey = getGeminiApiKey();
   if (geminiKey) {
-    const geminiTracks = await fetchFromGemini(geminiKey, prompt, count);
-    if (geminiTracks && geminiTracks.length > 0) {
-      return geminiTracks;
+    const geminiResult = await fetchFromGemini(geminiKey, prompt);
+    if (geminiResult && geminiResult.tracks.length > 0) {
+      return geminiResult;
     }
   }
 
-  // 2. Proxy personnalisé si configuré (Cloudflare Worker)
-  const proxyUrl = getCustomProxyUrl();
-  if (proxyUrl) {
-    const proxyTracks = await fetchFromProxy(proxyUrl, prompt);
-    if (proxyTracks && proxyTracks.length > 0) {
-      return proxyTracks;
-    }
-  }
-
-  // 3. Fallback gratuit avec timeout court (4s maximum)
-  const freeTracks = await fetchFromFreeService(prompt);
-  if (freeTracks && freeTracks.length > 0) {
-    return freeTracks;
+  // 2. Service public sans clé (Pollinations)
+  const freeResult = await fetchFromFreeService(prompt);
+  if (freeResult && freeResult.tracks.length > 0) {
+    return freeResult;
   }
 
   return null;

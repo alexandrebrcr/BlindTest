@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
@@ -641,16 +641,6 @@
           🔒 Sécurité : votre clé reste stockée localement dans votre navigateur (localStorage). Elle n'est jamais envoyée sur Git ni visible par quiconque.
         </p>
       </div>
-
-      <details style="margin-bottom: 1rem; font-size: 0.8rem;">
-        <summary style="cursor: pointer; color: var(--text-muted); padding: 0.2rem 0;">⚙️ Option : URL Proxy Cloudflare Worker</summary>
-        <div style="margin-top: 0.5rem;">
-          <input type="url" id="input-custom-proxy" class="input-answer" placeholder="https://mon-proxy.workers.dev" style="font-size: 0.8rem;">
-          <p style="font-size: 0.72rem; color: var(--text-dim); margin-top: 0.3rem;">
-            Optionnel. Si vous déployez le script dans le dossier <code>tools/cloudflare-worker.js</code>.
-          </p>
-        </div>
-      </details>
 
       <button class="btn-primary" id="btn-save-ai-settings" onclick="saveAiModalSettings()">Enregistrer les réglages ✅</button>
     </div>
