@@ -136,14 +136,14 @@ html, body {
 
 /* Écrans (Navigation SPA) */
 .screen {
-  display: none;
+  display: none !important;
   flex: 1;
   flex-direction: column;
   animation: fadeIn 0.3s ease;
 }
 
 .screen.active {
-  display: flex;
+  display: flex !important;
 }
 
 @keyframes fadeIn {
