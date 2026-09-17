@@ -379,21 +379,65 @@ export function getSmartThemeQueries(theme) {
 
 // Vivier de secours spécialisé pour les films, Disney et séries (Leurres avec nom de film)
 const UNIVERSAL_MOVIE_DECOYS = [
+  // Disney Classiques & Pixar
   { title: 'L\'Histoire de la vie', artist: 'Le Roi Lion', movieTitle: 'Le Roi Lion' },
+  { title: 'Hakuna Matata', artist: 'Le Roi Lion', movieTitle: 'Le Roi Lion' },
+  { title: 'Je voudrais déjà être roi', artist: 'Le Roi Lion', movieTitle: 'Le Roi Lion' },
+  { title: 'L\'Amour brille sous les étoiles', artist: 'Le Roi Lion', movieTitle: 'Le Roi Lion' },
   { title: 'Ce rêve bleu', artist: 'Aladdin', movieTitle: 'Aladdin' },
+  { title: 'Prince Ali', artist: 'Aladdin', movieTitle: 'Aladdin' },
+  { title: 'Je suis ton meilleur ami', artist: 'Aladdin', movieTitle: 'Aladdin' },
+  { title: 'Nuits d\'Arabie', artist: 'Aladdin', movieTitle: 'Aladdin' },
   { title: 'Libérée, délivrée', artist: 'La Reine des Neiges', movieTitle: 'La Reine des Neiges' },
+  { title: 'Le Renouveau', artist: 'La Reine des Neiges', movieTitle: 'La Reine des Neiges' },
+  { title: 'Je voudrais un bonhomme de neige', artist: 'La Reine des Neiges', movieTitle: 'La Reine des Neiges' },
+  { title: 'Dans un autre monde', artist: 'La Reine des Neiges 2', movieTitle: 'La Reine des Neiges 2' },
   { title: 'Sous l\'océan', artist: 'La Petite Sirène', movieTitle: 'La Petite Sirène' },
+  { title: 'Partir là-bas', artist: 'La Petite Sirène', movieTitle: 'La Petite Sirène' },
+  { title: 'Embrasse-la', artist: 'La Petite Sirène', movieTitle: 'La Petite Sirène' },
+  { title: 'Pauvres âmes en perdition', artist: 'La Petite Sirène', movieTitle: 'La Petite Sirène' },
   { title: 'Il en faut peu pour être heureux', artist: 'Le Livre de la Jungle', movieTitle: 'Le Livre de la Jungle' },
+  { title: 'Être un homme comme vous', artist: 'Le Livre de la Jungle', movieTitle: 'Le Livre de la Jungle' },
   { title: 'Comme un homme', artist: 'Mulan', movieTitle: 'Mulan' },
+  { title: 'Réflexion', artist: 'Mulan', movieTitle: 'Mulan' },
+  { title: 'Une belle fille à aimer', artist: 'Mulan', movieTitle: 'Mulan' },
   { title: 'De zéro en héros', artist: 'Hercule', movieTitle: 'Hercule' },
+  { title: 'Jamais je n\'avouerai', artist: 'Hercule', movieTitle: 'Hercule' },
+  { title: 'Le Gospel pur', artist: 'Hercule', movieTitle: 'Hercule' },
   { title: 'Entre deux mondes', artist: 'Tarzan', movieTitle: 'Tarzan' },
+  { title: 'Enfant de l\'homme', artist: 'Tarzan', movieTitle: 'Tarzan' },
+  { title: 'Je veux savoir', artist: 'Tarzan', movieTitle: 'Tarzan' },
   { title: 'Le Bleu lumière', artist: 'Vaiana', movieTitle: 'Vaiana' },
+  { title: 'Pour les hommes', artist: 'Vaiana', movieTitle: 'Vaiana' },
+  { title: 'Bling-bling', artist: 'Vaiana', movieTitle: 'Vaiana' },
   { title: 'Tout le monde veut devenir un cat', artist: 'Les Aristochats', movieTitle: 'Les Aristochats' },
+  { title: 'Des gammes et des arpèges', artist: 'Les Aristochats', movieTitle: 'Les Aristochats' },
   { title: 'Je suis ton ami', artist: 'Toy Story', movieTitle: 'Toy Story' },
+  { title: 'Jamais plus je ne volerai', artist: 'Toy Story', movieTitle: 'Toy Story' },
   { title: 'Ne parlons pas de Bruno', artist: 'Encanto', movieTitle: 'Encanto' },
+  { title: 'Sous les apparences', artist: 'Encanto', movieTitle: 'Encanto' },
   { title: 'Où est la vraie vie ?', artist: 'Raiponce', movieTitle: 'Raiponce' },
+  { title: 'Je veux y croire', artist: 'Raiponce', movieTitle: 'Raiponce' },
+  { title: 'J\'ai un rêve', artist: 'Raiponce', movieTitle: 'Raiponce' },
   { title: 'Ne m\'oublie pas', artist: 'Coco', movieTitle: 'Coco' },
+  { title: 'Un poco loco', artist: 'Coco', movieTitle: 'Coco' },
   { title: 'Histoire éternelle', artist: 'La Belle et la Bête', movieTitle: 'La Belle et la Bête' },
+  { title: 'C\'est la fête', artist: 'La Belle et la Bête', movieTitle: 'La Belle et la Bête' },
+  { title: 'Belle', artist: 'La Belle et la Bête', movieTitle: 'La Belle et la Bête' },
+  { title: 'L\'Air du vent', artist: 'Pocahontas', movieTitle: 'Pocahontas' },
+  { title: 'Des sauvages', artist: 'Pocahontas', movieTitle: 'Pocahontas' },
+  { title: 'Au bout du rêve', artist: 'La Princesse et la Grenouille', movieTitle: 'La Princesse et la Grenouille' },
+  { title: 'Mes amis de l\'au-delà', artist: 'La Princesse et la Grenouille', movieTitle: 'La Princesse et la Grenouille' },
+  { title: 'Quand on prie la bonne étoile', artist: 'Pinocchio', movieTitle: 'Pinocchio' },
+  { title: 'Bibbidi-Bobbidi-Boo', artist: 'Cendrillon', movieTitle: 'Cendrillon' },
+  { title: 'Un jour mon prince viendra', artist: 'Blanche-Neige', movieTitle: 'Blanche-Neige' },
+  { title: 'Heigh-Ho', artist: 'Blanche-Neige', movieTitle: 'Blanche-Neige' },
+  { title: 'Try Everything', artist: 'Zootopie', movieTitle: 'Zootopie' },
+  { title: 'Le Festin', artist: 'Ratatouille', movieTitle: 'Ratatouille' },
+  { title: 'Si je ne t\'avais pas', artist: 'Monstres et Cie', movieTitle: 'Monstres et Cie' },
+  { title: 'Les Indestructibles Thème', artist: 'Les Indestructibles', movieTitle: 'Les Indestructibles' },
+  { title: 'Life is a Highway', artist: 'Cars', movieTitle: 'Cars' },
+  // Cinéma & Séries cultes
   { title: 'Star Wars Theme', artist: 'John Williams', movieTitle: 'Star Wars' },
   { title: 'He\'s a Pirate', artist: 'Hans Zimmer', movieTitle: 'Pirates des Caraïbes' },
   { title: 'Hedwig\'s Theme', artist: 'John Williams', movieTitle: 'Harry Potter' },
@@ -405,7 +449,10 @@ const UNIVERSAL_MOVIE_DECOYS = [
   { title: 'Jurassic Park Theme', artist: 'John Williams', movieTitle: 'Jurassic Park' },
   { title: 'James Bond Theme', artist: 'Monty Norman', movieTitle: 'James Bond' },
   { title: 'Ghostbusters', artist: 'Ray Parker Jr.', movieTitle: 'SOS Fantômes' },
-  { title: 'Danger Zone', artist: 'Kenny Loggins', movieTitle: 'Top Gun' }
+  { title: 'Danger Zone', artist: 'Kenny Loggins', movieTitle: 'Top Gun' },
+  { title: 'Mission Impossible Theme', artist: 'Lalo Schifrin', movieTitle: 'Mission Impossible' },
+  { title: 'The Pink Panther Theme', artist: 'Henry Mancini', movieTitle: 'La Panthère Rose' },
+  { title: 'Stayin\' Alive', artist: 'Bee Gees', movieTitle: 'La Fièvre du samedi soir' }
 ];
 
 // Vaste vivier universel de secours (60 classiques cultes multi-genres)
@@ -507,7 +554,8 @@ export async function preparePlaylist(category, trackCount = 10, onProgress = nu
       onProgress(20, `${aiProviderName} compose votre sélection sur-mesure...`);
     }
 
-    const safetyBuffer = trackCount <= 5 ? 2 : 4;
+    // On demande un buffer de sécurité substantiel pour compenser les éventuels morceaux introuvables sur iTunes
+    const safetyBuffer = Math.max(5, Math.ceil(trackCount * 0.4));
     const aiResult = await generateTracksFromAI(themeToAsk, trackCount + safetyBuffer);
 
     if (aiResult) {
@@ -519,29 +567,39 @@ export async function preparePlaylist(category, trackCount = 10, onProgress = nu
         let processed = 0;
 
         for (const item of aiTracks) {
-          const query = `${item.artist} ${item.title}`;
+          const query = item.artist ? `${item.artist} ${item.title}` : item.title;
           const results = await searchTrack(query, category.country || 'FR', item.movie || null);
 
-          // Verser TOUTES les trouvailles de cette recherche dans le vivier de leurres
-          for (const track of results) {
-            allFetchedForDecoys.push(track);
-            if (item.movie && !track.movieTitle) {
-              track.movieTitle = item.movie;
+          if (results && results.length > 0) {
+            // Conserver TOUS les résultats dans le vivier de leurres
+            for (const track of results) {
+              if (item.movie && !track.movieTitle) {
+                track.movieTitle = item.movie;
+              }
+              allFetchedForDecoys.push(track);
             }
-            addTrackToPool(track);
+
+            // Ajouter UNIQUEMENT le premier résultat (le meilleur match studio) au pool de jeu
+            const bestTrack = results[0];
+            if (item.movie && !bestTrack.movieTitle) {
+              bestTrack.movieTitle = item.movie;
+            }
+            addTrackToPool(bestTrack);
           }
 
           processed++;
           if (onProgress) {
             onProgress(Math.min(90, 50 + Math.round((processed / aiTracks.length) * 40)));
           }
+
+          // On ne s'arrête que lorsque le pool a VRAIMENT atteint le nombre de pistes demandé
           if (pool.length >= trackCount + safetyBuffer) break;
         }
       }
     }
   }
 
-  // 2. MODE SANS CLÉ (100% AUTONOME, INSTANTANÉ) OU COMPLÉMENT
+  // 2. MODE SANS CLÉ (100% AUTONOME, INSTANTANÉ) OU COMPLÉMENT SI QUOTA IA INSUFFISANT
   if (pool.length < trackCount) {
     if (onProgress) onProgress(40, isCustom ? "Recherche musicale sur votre thème..." : "Finalisation de la playlist...");
 
@@ -554,27 +612,43 @@ export async function preparePlaylist(category, trackCount = 10, onProgress = nu
     for (const q of shuffledQueries) {
       const results = await searchTrack(q, category.country || 'FR');
 
-      // On conserve TOUS les résultats pour un vivier de leurres immense et authentique
+      // On conserve tous les résultats pour les leurres
       for (const track of results) {
         allFetchedForDecoys.push(track);
       }
 
+      // N'ajouter qu'un seul morceau par recherche
       const shuffledResults = shuffleArray(results);
       for (const track of shuffledResults) {
         if (addTrackToPool(track)) {
           break;
         }
       }
-      if (pool.length >= trackCount + 6) break;
+      if (pool.length >= trackCount + 4) break;
+    }
+
+    // Filet de sécurité ultime pour garantir à 100% le nombre de morceaux choisi par l'utilisateur
+    if (pool.length < trackCount) {
+      for (const track of shuffleArray(allFetchedForDecoys)) {
+        addTrackToPool(track);
+        if (pool.length >= trackCount) break;
+      }
     }
   }
 
-  // Sélection aléatoire des N morceaux demandés
+  // Sélection aléatoire des N morceaux demandés (respect strict du nombre)
   const finalTracks = shuffleArray(pool).slice(0, trackCount);
 
   // 3. GÉNÉRATION DES LEURRES POUR LE MODE QCM (SANS AUCUN DOUBLON SUR TOUTE LA SESSION)
   const categoryDecoys = category.decoys || [];
-  const globalDecoys = [
+
+  // Détermine si cette partie est axée sur des films / dessins animés / Disney / séries
+  const isMovieTheme = category.id === 'disney_dessins_animes' ||
+                       category.id === 'cinema_series' ||
+                       (customPrompt && /\b(disney|pixar|dessin|manga|anime|anim[eé]|film|cinema|cin[eé]ma|s[eé]rie|serie|ost|b\.o\.|soundtrack)\b/i.test(customPrompt)) ||
+                       finalTracks.filter(t => !!t.movieTitle).length >= Math.max(1, Math.floor(finalTracks.length / 3));
+
+  const rawGlobalDecoys = [
     // Priorité 1 : les leurres thématiques ciblés générés par l'IA
     ...aiDecoys.map(d => ({ title: d.title, artist: d.artist, movieTitle: d.movie || d.movieTitle || null })),
     // Priorité 2 : les alternatives réelles issues des recherches iTunes
@@ -585,13 +659,13 @@ export async function preparePlaylist(category, trackCount = 10, onProgress = nu
     ...categoryDecoys.map(d => ({ title: d.title, artist: d.artist, movieTitle: d.movie || d.movieTitle || null }))
   ];
 
+  // RÈGLE D'OR : En thème film/Disney, aucun leurre sans nom de film/Disney n'a le droit d'entrer !
+  const globalDecoys = isMovieTheme
+    ? rawGlobalDecoys.filter(d => !!(d.movieTitle || d.movie))
+    : rawGlobalDecoys;
+
   // Ensemble pour mémoriser les leurres déjà utilisés dans la partie (afin d'éviter les répétitions)
   const sessionUsedDecoyKeys = new Set(finalTracks.map(t => canonicalKey(t.title)));
-
-  // Détermine si cette partie est axée sur des films / dessins animés / séries
-  const isMovieTheme = category.id === 'disney_dessins_animes' ||
-                       category.id === 'cinema_series' ||
-                       finalTracks.filter(t => !!t.movieTitle).length >= (finalTracks.length / 2);
 
   const preparedTracks = finalTracks.map((track) => {
     const chosenDecoys = [];
@@ -617,11 +691,8 @@ export async function preparePlaylist(category, trackCount = 10, onProgress = nu
 
       // Si le morceau est un film/dessin animé :
       if (treatAsMovie) {
-        // En mode film, le leurre DOIT avoir un film/dessin animé associé
         if (!candMovie) continue;
-        // Le film du leurre ne doit PAS être le même film que la bonne réponse !
         if (trackMovie && canonicalKey(candMovie) === canonicalKey(trackMovie)) continue;
-        // Ne pas proposer deux fois le même film dans les 4 choix !
         if (chosenDecoys.some(d => canonicalKey(d.movieTitle || d.movie) === canonicalKey(candMovie))) continue;
       }
 
@@ -635,7 +706,7 @@ export async function preparePlaylist(category, trackCount = 10, onProgress = nu
       if (chosenDecoys.length === 3) break;
     }
 
-    // 2ème passe : si la session est longue et le vivier épuisé, réutiliser des candidats non présents dans ce tour
+    // 2ème passe : si la session est longue et le vivier épuisé, réutiliser des candidats du vivier sans doublon au sein du même tour
     if (chosenDecoys.length < 3) {
       const localUsedKeys = new Set([
         canonicalKey(track.title),
@@ -667,7 +738,7 @@ export async function preparePlaylist(category, trackCount = 10, onProgress = nu
       }
     }
 
-    // 3ème passe : si le vivier est encore insuffisant, puiser dans les viviers de secours
+    // 3ème passe : si le vivier est encore insuffisant, puiser dans les viviers universels thématiques
     if (chosenDecoys.length < 3) {
       const backupList = treatAsMovie ? UNIVERSAL_MOVIE_DECOYS : EXTENDED_UNIVERSAL_DECOYS;
 
@@ -685,6 +756,38 @@ export async function preparePlaylist(category, trackCount = 10, onProgress = nu
         }
 
         sessionUsedDecoyKeys.add(uKey);
+        chosenDecoys.push({
+          title: u.title,
+          artist: u.artist,
+          movieTitle: uMovie
+        });
+
+        if (chosenDecoys.length === 3) break;
+      }
+    }
+
+    // 4ème passe : garantie absolue sans jamais de hors-sujet ni de "Titre Mystère"
+    if (chosenDecoys.length < 3) {
+      const backupList = treatAsMovie ? UNIVERSAL_MOVIE_DECOYS : EXTENDED_UNIVERSAL_DECOYS;
+      const localUsedKeys = new Set([
+        canonicalKey(track.title),
+        ...chosenDecoys.map(d => canonicalKey(d.title))
+      ]);
+
+      for (const u of shuffleArray(backupList)) {
+        const uKey = canonicalKey(u.title);
+        const uMovie = u.movieTitle || u.movie || null;
+
+        if (!uKey || localUsedKeys.has(uKey)) continue;
+        if (areTitlesEquivalent(u.title, track.title)) continue;
+
+        if (treatAsMovie) {
+          if (!uMovie) continue;
+          if (trackMovie && canonicalKey(uMovie) === canonicalKey(trackMovie)) continue;
+          if (chosenDecoys.some(d => canonicalKey(d.movieTitle || d.movie) === canonicalKey(uMovie))) continue;
+        }
+
+        localUsedKeys.add(uKey);
         chosenDecoys.push({
           title: u.title,
           artist: u.artist,

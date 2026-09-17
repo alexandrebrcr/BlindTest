@@ -85,61 +85,50 @@ function sanitizeTrackItems(list) {
       artist: String(item.artist || item.artiste || item.author || item.singer).trim(),
       movie: item.movie || item.film || item.serie || item.show || null
     }))
-    .filter(item => item.title.length > 1 && item.artist.length > 1);
+    .filter(item => item.title.length > 0 && item.artist.length > 0);
 }
 
-// Extraction et nettoyage des pistes et leurres JSON
+// Extraction robuste du JSON généré par l'IA
 function parseAiResponse(rawText) {
-  if (!rawText || rawText.trim().length === 0) return null;
+  if (!rawText) return null;
 
   let cleaned = rawText.trim();
-  if (cleaned.includes('```')) {
-    cleaned = cleaned.replace(/```(?:json)?([\s\S]*?)```/g, '$1').trim();
+  // Suppression éventuelle des balises markdown ```json ... ```
+  cleaned = cleaned.replace(/^```json\s*/i, '').replace(/^```\s*/, '').replace(/\s*```$/, '').trim();
+
+  const firstBrace = cleaned.indexOf('{');
+  const lastBrace = cleaned.lastIndexOf('}');
+  if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+    cleaned = cleaned.slice(firstBrace, lastBrace + 1);
   }
 
   let parsed = null;
   try {
     parsed = JSON.parse(cleaned);
-  } catch {
-    const firstBrace = cleaned.indexOf('{');
-    const lastBrace = cleaned.lastIndexOf('}');
-    if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
-      try {
-        parsed = JSON.parse(cleaned.substring(firstBrace, lastBrace + 1));
-      } catch {
-        // Essai avec crochet pour tableau direct
-        const firstBracket = cleaned.indexOf('[');
-        const lastBracket = cleaned.lastIndexOf(']');
-        if (firstBracket !== -1 && lastBracket !== -1 && lastBracket > firstBracket) {
-          try {
-            parsed = JSON.parse(cleaned.substring(firstBracket, lastBracket + 1));
-          } catch (e) {
-            console.warn('Échec parsing JSON partiel:', e);
-          }
-        }
-      }
+  } catch (err) {
+    // Tentative de réparation de JSON tronqué
+    try {
+      const fixed = cleaned.replace(/,\s*([}\]])/g, '$1');
+      parsed = JSON.parse(fixed);
+    } catch (e2) {
+      console.warn('Échec du parsing JSON IA:', e2.message);
+      return null;
     }
   }
 
-  if (!parsed) return null;
+  if (!parsed || typeof parsed !== 'object') return null;
 
   let tracks = [];
   let decoys = [];
 
   if (Array.isArray(parsed)) {
     tracks = sanitizeTrackItems(parsed);
-  } else if (typeof parsed === 'object') {
+  } else {
     const rawTracks = parsed.tracks || parsed.chansons || parsed.morceaux || parsed.songs || [];
     const rawDecoys = parsed.decoys || parsed.leurres || parsed.fausses_reponses || parsed.fakes || [];
 
     tracks = sanitizeTrackItems(Array.isArray(rawTracks) ? rawTracks : []);
     decoys = sanitizeTrackItems(Array.isArray(rawDecoys) ? rawDecoys : []);
-
-    // Si tracks est vide mais qu'un autre tableau existe
-    if (tracks.length === 0) {
-      const foundArray = Object.values(parsed).find(Array.isArray);
-      if (foundArray) tracks = sanitizeTrackItems(foundArray);
-    }
   }
 
   return (tracks.length > 0) ? { tracks, decoys } : null;
@@ -149,7 +138,7 @@ function parseAiResponse(rawText) {
 async function fetchFromGemini(apiKey, prompt) {
   for (const model of GEMINI_MODELS) {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 9000);
+    const timeoutId = setTimeout(() => controller.abort(), 12000);
 
     try {
       const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`;
@@ -161,7 +150,7 @@ async function fetchFromGemini(apiKey, prompt) {
           contents: [{ parts: [{ text: prompt }] }],
           generationConfig: {
             responseMimeType: 'application/json',
-            temperature: 0.85
+            temperature: 0.75
           }
         })
       });
@@ -183,7 +172,7 @@ async function fetchFromGemini(apiKey, prompt) {
       }
     } catch (err) {
       clearTimeout(timeoutId);
-      console.warn(`Erreur appel Gemini (${model}):`, err.name === 'AbortError' ? 'Timeout 9s' : err.message);
+      console.warn(`Erreur appel Gemini (${model}):`, err.name === 'AbortError' ? 'Timeout 12s' : err.message);
     }
   }
 
@@ -218,13 +207,19 @@ async function fetchFromFreeService(prompt) {
 
 // Fonction principale exportée : Génération des morceaux ET des leurres ciblés
 export async function generateTracksFromAI(themeDescription, count = 10) {
-  const prompt = `Tu es un programmateur musical d'exception pour un jeu de blind test en soirée.
-Génère une sélection de qualité pour le thème : "${themeDescription}".
+  const trackTarget = Math.max(count + 6, Math.ceil(count * 1.5));
+  const decoyTarget = Math.max(35, count * 3);
 
-Consignes :
-1. "tracks" : Exactement ${count} morceaux cultes, immédiatement identifiables, emblématiques du thème (titre et artiste). Si c'est un animé, film ou série, indique le nom dans "movie".
-2. "decoys" : 20 autres morceaux ou artistes très connus du MÊME univers/genre musical pour servir de fausses réponses crédibles (leurres de QCM).
+  const prompt = `Tu es un programmateur musical d'exception pour un jeu de blind test en soirée.
+Génère une sélection de haute qualité pour le thème : "${themeDescription}".
+
+Consignes strictes :
+1. "tracks" : Exactement ${trackTarget} morceaux cultes, immédiatement identifiables, emblématiques et 100% fidèles au thème (titre et artiste). Si c'est un animé, film ou série (ex: Disney, Pixar, Marvel, Anime...), indique OBLIGATOIREMENT le nom exact du film / dessin animé / série dans "movie".
+2. "decoys" : Exactement ${decoyTarget} morceaux ou faux choix très connus appartenant STRICTEMENT au MÊME univers ou genre musical pour servir de leurres de QCM crédibles.
+   - RÈGLE ESSENTIELLE : Si le thème est Disney, dessins animés ou cinéma, TOUS les leurres doivent IMPÉRATIVEMENT être des films ou dessins animés avec leur nom dans "movie" ! Aucun morceau pop, rap ou variété hors-sujet !
+   - Si le thème est Rap, tous les leurres doivent être du Rap.
 3. Qualité sonore : Choisis UNIQUEMENT des morceaux connus dans leur version studio originale culte (jamais de versions live, acoustiques, reprises obscures ou remixes).
+
 Format strict JSON uniquement, sans aucun texte autour :
 {
   "tracks": [
