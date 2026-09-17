@@ -57,11 +57,14 @@ L'application est une **Progressive Web App (PWA)** certifiée. Elle s'installe 
 2. **✍️ Solo Saisie Libre** :
    - Tapez le nom de l'artiste ou du titre.
    - Moteur avec algorithme de distance de Levenshtein pour valider la réponse même avec une petite faute de frappe ou d'orthographe.
-3. **🚨 Soirée Buzzer (2 à 4 joueurs sur le même écran)** :
+3. **📱 Soirée "Chacun son tel" (Salon en ligne avec QR Code)** :
+   - L'écran principal (TV, PC ou tablette branchée à l'enceinte) affiche un **code de salon** et un **QR Code**.
+   - Vos amis scannent le QR Code avec leur iPhone ou Android : **leur téléphone se transforme en buzzer géant tactile** (avec vibrations haptiques !).
+   - Connexion WebRTC peer-to-peer ultra-rapide (< 50ms de latence) sans aucun serveur payant.
+4. **🚨 Soirée 1 Écran (2 à 4 joueurs sur le même appareil)** :
    - Posez le téléphone ou la tablette au milieu de la table.
-   - Chaque joueur / équipe a son quadrant de couleur tactile.
-   - Le premier qui touche l'écran gagne la main avec un compte à rebours de 5 secondes pour crier sa réponse !
-4. **👑 Soirée "Maître du Jeu"** :
+   - Chaque joueur / équipe a son quadrant de couleur tactile (avec rotation 180° pour le joueur assis en face).
+5. **👑 Soirée "Maître du Jeu"** :
    - Branchez votre appareil en Bluetooth sur l'enceinte de la soirée.
    - Le maître du jeu contrôle la musique (Lecture, Pause, Rejouer), consulte la réponse secrète et gère les scores des équipes en 1 clic.
 

@@ -12,9 +12,9 @@ export const CATEGORIES = [
       'Jul bande organisée', 'Orelsan la terre est ronde', 'PNL au dd',
       'Ninho lettre a une femme', 'Booba dkr', 'Damso macarena',
       'Nekfeu on verra', 'IAM le mia', 'Suprême NTM seine saint denis style',
-      'Soprano en feu', 'SCH bande organisée', 'Lomepal trop beau',
-      'Gazo die', 'Gims bella', 'Vald desaccordes', 'Aya Nakamura djadja',
-      'Kaaris tchoin', 'Heuss l\'enfoire moulaga', 'PLK un peu de haine'
+      'Soprano en feu', 'SCH bande organisée', 'MC Solaar caroline',
+      'Disiz j\'pète les plombs', 'Gazo die', 'Gims bella', 'Vald desaccordes',
+      'Aya Nakamura djadja', 'Kaaris tchoin', 'Heuss l\'enfoire moulaga', 'PLK un peu de haine'
     ]
   },
   {

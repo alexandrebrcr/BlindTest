@@ -355,3 +355,162 @@
   font-size: 1.1rem;
   cursor: pointer;
 }
+
+/* ==========================================================================
+   Styles Salon en Ligne (Lobby Hôte & Contrôleur Joueur Smartphone)
+   ========================================================================== */
+
+.room-lobby-box {
+  text-align: center;
+  padding: 1.5rem 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.qrcode-box {
+  background: #ffffff;
+  padding: 14px;
+  border-radius: var(--radius-md);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 25px rgba(0, 242, 254, 0.3);
+  margin: 0.5rem 0;
+}
+
+.qrcode-box img {
+  display: block;
+}
+
+.room-code-tag {
+  font-family: var(--font-display);
+  font-size: 2.2rem;
+  font-weight: 900;
+  letter-spacing: 4px;
+  background: var(--grad-cyan-blue);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  padding: 0.2rem 1rem;
+  background-color: rgba(0, 242, 254, 0.08);
+  border-radius: var(--radius-full);
+  border: 1px dashed var(--primary-cyan);
+}
+
+.room-players-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+  width: 100%;
+  min-height: 50px;
+  margin: 0.5rem 0;
+}
+
+.room-player-tag {
+  padding: 0.5rem 0.9rem;
+  border-radius: var(--radius-full);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 0.9rem;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes popIn {
+  from { transform: scale(0.6); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+/* Écran Buzzer Mobile du Joueur */
+.client-buzzer-screen {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 1rem 0;
+}
+
+.client-status-card {
+  text-align: center;
+  padding: 1rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border-glass);
+  border-radius: var(--radius-md);
+  margin-bottom: 1rem;
+}
+
+.client-buzzer-btn {
+  flex: 1;
+  min-height: 280px;
+  border-radius: var(--radius-lg);
+  border: none;
+  font-family: var(--font-display);
+  font-size: 3.2rem;
+  font-weight: 900;
+  letter-spacing: 3px;
+  color: #fff;
+  cursor: pointer;
+  user-select: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: transform 0.1s ease, filter 0.2s ease, box-shadow 0.3s ease;
+  box-shadow: 0 0 40px rgba(0, 242, 254, 0.4);
+}
+
+.client-buzzer-btn:active {
+  transform: scale(0.95);
+  filter: brightness(1.25);
+}
+
+.client-buzzer-btn.locked {
+  background: #1c1e2e !important;
+  color: #6c7293 !important;
+  opacity: 0.6;
+  cursor: not-allowed;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+.client-buzzer-btn.winner {
+  background: linear-gradient(135deg, #00ff88, #00b09b) !important;
+  color: #000 !important;
+  box-shadow: 0 0 60px rgba(0, 255, 136, 0.8) !important;
+  animation: pulseWinner 0.6s infinite alternate;
+}
+
+@keyframes pulseWinner {
+  from { transform: scale(0.98); }
+  to { transform: scale(1.02); }
+}
+
+/* Sélecteur de couleurs */
+.color-picker-group {
+  display: flex;
+  gap: 0.6rem;
+  justify-content: center;
+  margin: 0.8rem 0;
+}
+
+.color-dot {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 3px solid transparent;
+  transition: var(--transition);
+}
+
+.color-dot.selected {
+  border-color: #fff;
+  transform: scale(1.15);
+  box-shadow: 0 0 15px rgba(255, 255, 255, 0.6);
+}

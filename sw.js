@@ -13,6 +13,9 @@ const STATIC_ASSETS = [
   './js/itunes-api.js',
   './js/game-engine.js',
   './js/buzzer-engine.js',
+  './js/room-peer.js',
+  './js/peerjs.min.js',
+  './js/qrcode.min.js',
   './assets/icons/icon.svg'
 ];
 

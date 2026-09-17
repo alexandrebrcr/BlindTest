@@ -18,6 +18,10 @@
   <!-- Stylesheets -->
   <link rel="stylesheet" href="./css/style.css">
   <link rel="stylesheet" href="./css/buzzer.css">
+
+  <!-- Librairies WebRTC P2P et QR Code (locales & autonomes) -->
+  <script src="./js/qrcode.min.js"></script>
+  <script src="./js/peerjs.min.js"></script>
 </head>
 <body>
 
@@ -72,8 +76,20 @@
 
         <div class="mode-card" data-mode="buzzer" id="mode-opt-buzzer">
           <div class="mode-badge">🚨</div>
-          <div class="mode-title">Soirée Buzzer</div>
-          <div class="mode-desc">2 à 4 joueurs sur le même écran, le plus rapide buzze !</div>
+          <div class="mode-title">Soirée 1 Écran</div>
+          <div class="mode-desc">2 à 4 buzzers sur les coins d'une même tablette/téléphone.</div>
+        </div>
+
+        <div class="mode-card" data-mode="room-host" id="mode-opt-room-host">
+          <div class="mode-badge">🌐</div>
+          <div class="mode-title">Chacun son tel</div>
+          <div class="mode-desc">Créez un salon avec QR Code, vos amis buzzent sur leur mobile !</div>
+        </div>
+
+        <div class="mode-card" data-mode="room-join" id="mode-opt-room-join">
+          <div class="mode-badge">📲</div>
+          <div class="mode-title">Rejoindre Salon</div>
+          <div class="mode-desc">Transformez ce smartphone en buzzer pour un salon existant.</div>
         </div>
 
         <div class="mode-card" data-mode="host" id="mode-opt-host">
@@ -275,6 +291,171 @@
       <h3 class="section-title">🏆 Scores des Équipes</h3>
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1rem;" id="host-teams-container">
         <!-- Équipes générées en JS -->
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         ÉCRAN 7 : LOBBY SALON EN LIGNE (HÔTE / TV)
+         ==================================================================== -->
+    <section class="screen" id="screen-room-host-lobby">
+      <div class="game-top-bar">
+        <span class="round-pill">Salon Multijoueur</span>
+        <button class="btn-secondary" id="btn-quit-lobby" style="width: auto; padding: 0.4rem 0.8rem; font-size: 0.8rem;">Quitter ✕</button>
+      </div>
+
+      <div class="glass-card room-lobby-box">
+        <h2 style="font-family: var(--font-display); font-size: 1.5rem; font-weight: 800;">
+          Scannez pour rejoindre 📱
+        </h2>
+        <p style="color: var(--text-muted); font-size: 0.85rem;">
+          Chaque joueur utilise son smartphone comme buzzer !
+        </p>
+
+        <!-- QR Code généré dynamiquement -->
+        <div class="qrcode-box" id="room-qrcode-container"></div>
+
+        <div style="font-size: 0.85rem; color: var(--text-muted);">Ou entrez ce code :</div>
+        <div class="room-code-tag" id="room-code-display">CHARGEMENT...</div>
+
+        <button class="btn-secondary" id="btn-copy-room-link" style="width: auto; padding: 0.5rem 1rem; font-size: 0.82rem;">
+          📋 Copier le lien d'invitation
+        </button>
+
+        <h3 style="font-family: var(--font-display); font-size: 1.1rem; margin-top: 0.8rem;">
+          Joueurs connectés (<span id="room-players-count">0</span>)
+        </h3>
+        <div class="room-players-list" id="room-players-list">
+          <span style="color: var(--text-dim); font-size: 0.85rem;">En attente des premiers joueurs...</span>
+        </div>
+
+        <button class="btn-primary" id="btn-start-room-game" style="margin-top: 0.5rem;" disabled>
+          LANCER LA PARTIE 🎵
+        </button>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         ÉCRAN 8 : REJOINDRE UN SALON (JOUEUR SUR SON SMARTPHONE)
+         ==================================================================== -->
+    <section class="screen" id="screen-room-client-join">
+      <div class="game-top-bar">
+        <span class="round-pill">Rejoindre un salon</span>
+        <button class="btn-secondary" id="btn-quit-client-join" style="width: auto; padding: 0.4rem 0.8rem; font-size: 0.8rem;">Accueil ✕</button>
+      </div>
+
+      <div class="glass-card" style="text-align: center;">
+        <div style="font-size: 2.2rem; margin-bottom: 0.5rem;">📲</div>
+        <h2 style="font-family: var(--font-display); font-size: 1.4rem; font-weight: 800; margin-bottom: 0.4rem;">
+          Votre Buzzer Personnel
+        </h2>
+        <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 1.25rem;">
+          Connectez votre téléphone au salon affiché sur l'écran principal.
+        </p>
+
+        <form id="form-join-room" style="display: flex; flex-direction: column; gap: 0.85rem; text-align: left;">
+          <div>
+            <label style="font-size: 0.82rem; font-weight: 700; color: var(--text-muted);">CODE DU SALON :</label>
+            <input type="text" class="input-answer" id="input-room-code" placeholder="Ex: LION42" maxlength="8" style="text-transform: uppercase; font-family: var(--font-display); font-weight: 800; letter-spacing: 2px; text-align: center;" required>
+          </div>
+
+          <div>
+            <label style="font-size: 0.82rem; font-weight: 700; color: var(--text-muted);">VOTRE PSEUDO :</label>
+            <input type="text" class="input-answer" id="input-player-name" placeholder="Votre prénom" maxlength="15" required>
+          </div>
+
+          <div>
+            <label style="font-size: 0.82rem; font-weight: 700; color: var(--text-muted);">VOTRE COULEUR :</label>
+            <div class="color-picker-group" id="client-color-picker">
+              <!-- Pastilles générées en JS -->
+            </div>
+          </div>
+
+          <button type="submit" class="btn-primary" style="margin-top: 0.5rem;" id="btn-submit-join">
+            REJOINDRE LE SALON 🚀
+          </button>
+        </form>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         ÉCRAN 9 : CONTRÔLEUR BUZZER SMARTPHONE DU JOUEUR
+         ==================================================================== -->
+    <section class="screen client-buzzer-screen" id="screen-room-client-buzzer">
+      <div class="client-status-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span class="round-pill" id="client-badge-name" style="color: #fff; font-weight: 800;">Joueur</span>
+          <span style="font-family: var(--font-display); font-size: 1.2rem; font-weight: 900; color: var(--accent-yellow);" id="client-badge-score">0 pts</span>
+        </div>
+        <div style="font-size: 0.85rem; margin-top: 0.4rem; color: var(--text-muted);" id="client-room-status">
+          Écoutez la musique sur l'écran principal...
+        </div>
+      </div>
+
+      <!-- Gros Bouton Buzzer Tactile Réactif -->
+      <button class="client-buzzer-btn" id="btn-client-buzzer">
+        <span style="font-size: 4rem;">🚨</span>
+        <span>BUZZ !</span>
+      </button>
+
+      <div style="text-align: center; font-size: 0.75rem; color: var(--text-dim);">
+        Salon <strong id="client-room-code-tag" style="color: var(--primary-cyan);">----</strong> • Gardez votre écran allumé
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         ÉCRAN 10 : ÉCRAN DE JEU HÔTE SALON EN LIGNE (TV / MAIN SCREEN)
+         ==================================================================== -->
+    <section class="screen" id="screen-room-host-game">
+      <div class="game-top-bar">
+        <span class="round-pill" id="online-host-round">Manche 1 / 10</span>
+        <button class="btn-secondary" id="btn-online-host-quit" style="width: auto; padding: 0.4rem 0.8rem; font-size: 0.8rem;">Quitter ✕</button>
+      </div>
+
+      <!-- Barre de chrono -->
+      <div class="timer-bar-wrapper">
+        <div class="timer-bar-fill" id="online-host-timer"></div>
+      </div>
+
+      <!-- Vinyle / Pochette -->
+      <div class="vinyl-container">
+        <div class="vinyl-disc spinning" id="online-vinyl-disc">
+          <div class="vinyl-grooves"></div>
+          <img src="" alt="Pochette" class="album-cover" id="online-album-cover">
+          <div class="mystery-center-icon" id="online-mystery-icon">❓</div>
+        </div>
+      </div>
+
+      <!-- Carte de statut du tour / Verdict -->
+      <div class="glass-card" style="text-align: center; margin-bottom: 1rem;" id="online-status-card">
+        <div id="online-buzz-waiting">
+          <div style="font-size: 1.1rem; font-weight: 700;">Écoutez la musique...</div>
+          <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.2rem;">Les joueurs buzzent depuis leur smartphone !</div>
+          <button class="btn-secondary" id="btn-online-nobody" style="width: auto; margin: 0.75rem auto 0; padding: 0.4rem 0.9rem; font-size: 0.8rem;">
+            Personne ne sait 🤷‍♂️
+          </button>
+        </div>
+
+        <div id="online-buzz-active" style="display: none;">
+          <div style="font-family: var(--font-display); font-size: 1.5rem; font-weight: 900;" id="online-buzzed-player-title">Alex a buzzé !</div>
+          <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.8rem;">Verdict de la réponse orale :</div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem;">
+            <button class="btn-correct" id="btn-online-verdict-correct">✅ Bonne (+1)</button>
+            <button class="btn-wrong" id="btn-online-verdict-wrong">❌ Faux</button>
+          </div>
+        </div>
+
+        <div id="online-reveal-box" style="display: none;">
+          <div style="font-family: var(--font-display); font-size: 1.3rem; font-weight: 800;" id="online-reveal-title">Titre</div>
+          <div style="color: var(--primary-cyan); font-weight: 700;" id="online-reveal-artist">Artiste</div>
+          <div style="color: var(--text-muted); font-size: 0.8rem; margin-bottom: 0.8rem;" id="online-reveal-meta">Année</div>
+          <button class="btn-primary" id="btn-online-next-round">Morceau Suivant ➡️</button>
+        </div>
+      </div>
+
+      <!-- Leaderboard des joueurs connectés -->
+      <h3 class="section-title">🏆 Classement en direct</h3>
+      <div class="room-players-list" id="online-leaderboard-list">
+        <!-- Rempli en JS -->
       </div>
     </section>
 
