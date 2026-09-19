@@ -1,5 +1,5 @@
 // Service Worker pour BlindTest Party PWA
-const CACHE_NAME = 'blindtest-v6';
+const CACHE_NAME = 'blindtest-v7';
 const STATIC_ASSETS = [
   './',
   './index.html',
@@ -17,7 +17,9 @@ const STATIC_ASSETS = [
   './js/room-peer.js',
   './js/peerjs.min.js',
   './js/qrcode.min.js',
-  './assets/icons/icon.svg'
+  './assets/icons/icon.svg',
+  './assets/icons/icon-192.png',
+  './assets/icons/icon-512.png'
 ];
 
 self.addEventListener('install', (event) => {

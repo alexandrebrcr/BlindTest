@@ -184,14 +184,20 @@ export function getYear(releaseDate) {
 }
 
 // Évaluation de la qualité d'une piste (priorité absolue aux versions studio originales cultes)
-export function getTrackQualityScore(item, query = '') {
-  const q = (query || '').toLowerCase();
-  const title = (item.trackName || '').toLowerCase();
-  const album = (item.collectionName || '').toLowerCase();
-  const artist = (item.artistName || '').toLowerCase();
+export function getTrackQualityScore(item, query = '', expectedArtist = null, expectedTitle = null) {
+  const q = (query || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  const title = (item.trackName || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  const album = (item.collectionName || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  const artist = (item.artistName || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
   const combined = `${title} ${album} ${artist}`;
 
-  // Détection des versions indésirables pour un blind test (sauf si expressément demandé)
+  // 1. Rejet strict des reprises, quatuors, orchestres, berceuses, karaokés (ex: Vitamin String Quartet)
+  const isKnockoff = !q.includes('karaoke') && !q.includes('instrumental') && !q.includes('orchestra') && !q.includes('tribute') &&
+    /\b(karaoke|karaok[eé]|instrumental|tribute|tribute band|cover|cover band|covers|backing track|made famous by|in the style of|piano project|hit crew|all stars|orchestral tribute|sing king|string quartet|quartet|quatuor|orchestra|orchestre|philharmonic|symphony|symphonique|lullaby|berceuse|rockabye|kids united|chipmunks|ayoub sisters|piano version|piano solo|relaxing piano|guitar version|acoustic hits|sleep music|nursery|smooth jazz|music box|hommage|reprise)\b/i.test(combined);
+
+  if (isKnockoff) return -100;
+
+  // 2. Détection des versions indésirables (live, acoustique, remix, démo)
   const isLive = !q.includes('live') && !q.includes('concert') &&
     /\b(live|en public|en concert|au z[eé]nith|au bataclan|[aà] l[' ]olympia|live at|live from|in concert|tour \d{4}|live recording|direct live)\b/i.test(combined);
 
@@ -201,13 +207,9 @@ export function getTrackQualityScore(item, query = '') {
   const isRemix = !q.includes('remix') && !q.includes('mix') &&
     /\b(remix|remixed|club mix|extended mix|dub mix|dance mix|mashup|rework|bootleg)\b/i.test(combined);
 
-  const isKaraokeOrTribute = !q.includes('karaoke') && !q.includes('tribute') &&
-    /\b(karaoke|karaok[eé]|instrumental|tribute|cover band|backing track|made famous by|in the style of|piano project|hit crew|all stars|orchestral tribute|sing king)\b/i.test(combined);
-
   const isDemo = !q.includes('demo') &&
     /\b(demo|d[eé]mo|rehearsal|session acoustique|work tape|rough mix)\b/i.test(combined);
 
-  if (isKaraokeOrTribute) return -100;
   if (isLive) return -80;
   if (isAcoustic) return -60;
   if (isRemix) return -50;
@@ -215,17 +217,48 @@ export function getTrackQualityScore(item, query = '') {
 
   let score = 100;
 
-  // Bonus pour un album studio original plutôt qu'une compilation
+  // 3. Correspondance avec l'artiste attendu (énorme bonus pour l'artiste original)
+  if (expectedArtist) {
+    const cleanExp = expectedArtist.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    const expWords = cleanExp.split(/[^a-z0-9]+/).filter(w => w.length >= 3);
+    for (const ew of expWords) {
+      if (artist.includes(ew)) {
+        score += 60; // L'artiste du morceau iTunes correspond à l'artiste attendu
+      } else if (title.includes(ew)) {
+        score += 35; // L'artiste attendu est mentionné en feat dans le titre
+      }
+    }
+  }
+
+  // 4. Correspondance avec les mots de la requête globale
+  const queryWords = q
+    .split(/[^a-z0-9]+/)
+    .filter(w => w.length >= 3 && !['les', 'des', 'une', 'qui', 'que', 'the', 'and', 'for', 'with'].includes(w));
+
+  for (const w of queryWords) {
+    if (artist.includes(w)) {
+      score += 35;
+    } else if (title.includes(w)) {
+      score += 20;
+    }
+  }
+
+  // 5. Bonus pour un titre net (sans parenthèses parasites, mais en acceptant les feat légitimes)
+  const cleanedForParenCheck = (item.trackName || '')
+    .replace(/\b(feat\.|ft\.|featuring|with)\s+[^()\[\]]+/gi, '')
+    .replace(/\b(radio edit|album version|version single)\b/gi, '')
+    .trim();
+
+  if (!/\([^)]*\)|\[[^\]]*\]/.test(cleanedForParenCheck)) {
+    score += 25;
+  }
+
+  // 6. Bonus pour un album studio standard plutôt qu'une compilation générique
   if (item.collectionName && !/best of|compilation|greatest hits|anthology|intégrale/i.test(item.collectionName)) {
     score += 15;
   }
 
-  // Bonus si le titre est net, sans parenthèse parasite
-  if (!/\(.*\)|\[.*\]/.test(item.trackName)) {
-    score += 25;
-  }
-
-  // Les versions remasterisées studio sont appréciées pour leur dynamique
+  // 7. Léger bonus pour version remasterisée studio originale
   if (/\b(remaster|remastered)\b/i.test(item.trackName)) {
     score += 10;
   }
@@ -234,8 +267,8 @@ export function getTrackQualityScore(item, query = '') {
 }
 
 // Recherche d'un titre ou d'un artiste avec priorisation des versions studio
-export async function searchTrack(query, country = 'FR', movieHint = null) {
-  const cacheKey = `${country}:${query}`;
+export async function searchTrack(query, country = 'FR', movieHint = null, expectedArtist = null, expectedTitle = null) {
+  const cacheKey = `${country}:${query}:${expectedArtist || ''}`;
   if (cache.has(cacheKey)) {
     return cache.get(cacheKey);
   }
@@ -252,16 +285,16 @@ export async function searchTrack(query, country = 'FR', movieHint = null) {
     const rawTracks = (data.results || [])
       .filter(item => item.previewUrl && item.trackName && item.artistName);
 
-    // Calcul du score studio pour chaque piste
+    // Calcul du score studio pour chaque piste avec vérification stricte de l'artiste original
     const scoredTracks = rawTracks.map(item => ({
       item,
-      score: getTrackQualityScore(item, query)
+      score: getTrackQualityScore(item, query, expectedArtist, expectedTitle)
     }));
 
     // Tri pour placer les versions studio originales en premier
     scoredTracks.sort((a, b) => b.score - a.score);
 
-    // Si des versions studio propres (score >= 50) existent, on rejette catégoriquement tous les lives/acoustiques/remixes
+    // Si des versions studio propres (score >= 50) existent, on rejette catégoriquement tous les lives/acoustiques/remixes/knockoffs
     const hasCleanStudio = scoredTracks.some(t => t.score >= 50);
     const chosenItems = hasCleanStudio
       ? scoredTracks.filter(t => t.score >= 50).map(t => t.item)
@@ -568,7 +601,13 @@ export async function preparePlaylist(category, trackCount = 10, onProgress = nu
 
         for (const item of aiTracks) {
           const query = item.artist ? `${item.artist} ${item.title}` : item.title;
-          const results = await searchTrack(query, category.country || 'FR', item.movie || null);
+          const results = await searchTrack(
+            query,
+            category.country || 'FR',
+            item.movie || null,
+            item.artist || null,
+            item.title || null
+          );
 
           if (results && results.length > 0) {
             // Conserver TOUS les résultats dans le vivier de leurres

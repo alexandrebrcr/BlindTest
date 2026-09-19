@@ -1,50 +1,114 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
   <defs>
+    <!-- Dégradé de fond premium profond -->
     <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#0e0f24" />
-      <stop offset="50%" stop-color="#1b143f" />
-      <stop offset="100%" stop-color="#090a18" />
+      <stop offset="0%" stop-color="#0f0c24" />
+      <stop offset="45%" stop-color="#161238" />
+      <stop offset="100%" stop-color="#090816" />
     </linearGradient>
+
+    <!-- Dégradé Rose Néon -> Violet Electrique -->
     <linearGradient id="neonPink" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="#ff007f" />
-      <stop offset="100%" stop-color="#7928ca" />
+      <stop offset="50%" stop-color="#e01290" />
+      <stop offset="100%" stop-color="#8a2be2" />
     </linearGradient>
+
+    <!-- Dégradé Cyan Fluo -> Bleu Laser -->
     <linearGradient id="neonCyan" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="#00f2fe" />
       <stop offset="100%" stop-color="#4facfe" />
     </linearGradient>
-    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
-      <feGaussianBlur stdDeviation="12" result="blur" />
-      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+
+    <!-- Dégradé Miroir Égaliseur -->
+    <linearGradient id="eqGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" stop-color="#7928ca" />
+      <stop offset="50%" stop-color="#ff007f" />
+      <stop offset="100%" stop-color="#00f2fe" />
+    </linearGradient>
+
+    <!-- Effet de halo néon lumineux -->
+    <filter id="neonGlow" x="-25%" y="-25%" width="150%" height="150%">
+      <feGaussianBlur stdDeviation="14" result="blur" />
+      <feMerge>
+        <feMergeNode in="blur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+
+    <filter id="softGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="8" result="blur" />
+      <feMerge>
+        <feMergeNode in="blur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
     </filter>
   </defs>
 
-  <!-- Background Card -->
-  <rect width="512" height="512" rx="128" fill="url(#bgGrad)" />
-  <rect width="512" height="512" rx="128" fill="none" stroke="url(#neonPink)" stroke-width="4" stroke-opacity="0.3" />
+  <!-- Arrière-plan Carte Squircle parfaitement centré -->
+  <rect x="16" y="16" width="480" height="480" rx="120" fill="url(#bgGrad)" />
+  <rect x="16" y="16" width="480" height="480" rx="120" fill="none" stroke="url(#neonPink)" stroke-width="4" stroke-opacity="0.35" />
 
-  <!-- Headphones Arch -->
-  <path d="M 128 260 C 128 140, 384 140, 384 260" fill="none" stroke="url(#neonPink)" stroke-width="28" stroke-linecap="round" filter="url(#glow)" />
-  <path d="M 128 260 C 128 140, 384 140, 384 260" fill="none" stroke="#ffffff" stroke-width="8" stroke-linecap="round" opacity="0.8" />
+  <!-- Halo lumineux d'ambiance au centre -->
+  <circle cx="256" cy="256" r="140" fill="#7928ca" opacity="0.16" filter="url(#neonGlow)" />
 
-  <!-- Left Ear Cup -->
-  <rect x="100" y="240" width="46" height="84" rx="23" fill="url(#neonPink)" filter="url(#glow)" />
-  <rect x="100" y="240" width="46" height="84" rx="23" fill="url(#neonCyan)" opacity="0.4" />
-  
-  <!-- Right Ear Cup -->
-  <rect x="366" y="240" width="46" height="84" rx="23" fill="url(#neonPink)" filter="url(#glow)" />
-  <rect x="366" y="240" width="46" height="84" rx="23" fill="url(#neonCyan)" opacity="0.4" />
+  <!-- ================= CASQUE AUDIO ULTRA-CENTRE ================= -->
+  <!-- Arceau extérieur (Centre X=256, Y de 136 à 256) -->
+  <path d="M 126 256 C 126 126, 386 126, 386 256" 
+        fill="none" 
+        stroke="url(#neonPink)" 
+        stroke-width="26" 
+        stroke-linecap="round" 
+        filter="url(#neonGlow)" />
 
-  <!-- Equalizer / Wave Bars in Center -->
-  <g transform="translate(196, 230)" filter="url(#glow)">
-    <rect x="0" y="30" width="14" height="40" rx="7" fill="url(#neonCyan)" />
-    <rect x="26" y="10" width="14" height="80" rx="7" fill="url(#neonPink)" />
-    <rect x="52" y="0" width="14" height="100" rx="7" fill="url(#neonCyan)" />
-    <rect x="78" y="20" width="14" height="60" rx="7" fill="url(#neonPink)" />
-    <rect x="104" y="35" width="14" height="30" rx="7" fill="url(#neonCyan)" />
+  <!-- Reflet lumineux interne de l'arceau -->
+  <path d="M 140 248 C 140 142, 372 142, 372 248" 
+        fill="none" 
+        stroke="#ffffff" 
+        stroke-width="5" 
+        stroke-linecap="round" 
+        opacity="0.75" />
+
+  <!-- Oreillette Gauche (Centrée sur X=126, Y=256) -->
+  <g filter="url(#softGlow)">
+    <rect x="102" y="210" width="48" height="92" rx="24" fill="#1b153b" stroke="url(#neonPink)" stroke-width="4" />
+    <rect x="110" y="222" width="32" height="68" rx="16" fill="url(#neonPink)" opacity="0.85" />
+    <rect x="115" y="232" width="8" height="48" rx="4" fill="#ffffff" opacity="0.5" />
   </g>
 
-  <!-- Musical Note or Mystery Question Mark -->
-  <path d="M 230 380 Q 256 360 280 380 T 260 410" fill="none" stroke="url(#neonCyan)" stroke-width="8" stroke-linecap="round" />
-  <circle cx="260" cy="435" r="6" fill="url(#neonCyan)" filter="url(#glow)" />
+  <!-- Oreillette Droite (Centrée sur X=386, Y=256, parfaite symétrie) -->
+  <g filter="url(#softGlow)">
+    <rect x="362" y="210" width="48" height="92" rx="24" fill="#1b153b" stroke="url(#neonPink)" stroke-width="4" />
+    <rect x="370" y="222" width="32" height="68" rx="16" fill="url(#neonPink)" opacity="0.85" />
+    <rect x="389" y="232" width="8" height="48" rx="4" fill="#ffffff" opacity="0.5" />
+  </g>
+
+  <!-- ================= ÉGALISEUR / ONDES MUSICALES AU CENTRE ================= -->
+  <!-- 7 barres d'égaliseur parfaitement symétriques et centrées sur X=256, Y=256 -->
+  <g filter="url(#neonGlow)">
+    <!-- Barre 1 (X=184) -->
+    <rect x="178" y="234" width="12" height="44" rx="6" fill="url(#neonCyan)" />
+    <!-- Barre 2 (X=208) -->
+    <rect x="202" y="218" width="12" height="76" rx="6" fill="url(#neonCyan)" />
+    <!-- Barre 3 (X=232) -->
+    <rect x="226" y="202" width="12" height="108" rx="6" fill="url(#eqGrad)" />
+    <!-- Barre 4 - Pique centrale (X=256) -->
+    <rect x="250" y="186" width="12" height="140" rx="6" fill="#ffffff" />
+    <!-- Barre 5 (X=280) -->
+    <rect x="274" y="202" width="12" height="108" rx="6" fill="url(#eqGrad)" />
+    <!-- Barre 6 (X=304) -->
+    <rect x="298" y="218" width="12" height="76" rx="6" fill="url(#neonCyan)" />
+    <!-- Barre 7 (X=328) -->
+    <rect x="322" y="234" width="12" height="44" rx="6" fill="url(#neonCyan)" />
+  </g>
+
+  <!-- ================= ÉTINCELLE / BADGE PLAY AU BAS (CENTRÉ SUR X=256, Y=376) ================= -->
+  <!-- Disque et symbole Play vibrant pour évoquer le Blind Test musical -->
+  <circle cx="256" cy="378" r="28" fill="#13102c" stroke="url(#neonCyan)" stroke-width="3.5" filter="url(#softGlow)" />
+  <!-- Triangle Play centré -->
+  <polygon points="250,366 268,378 250,390" fill="url(#neonCyan)" />
+
+  <!-- Deux notes étoiles scintillantes symétriques -->
+  <path d="M 194 366 Q 202 376 212 378 Q 202 380 194 390 Q 192 380 182 378 Q 192 376 194 366 Z" fill="url(#neonPink)" opacity="0.8" />
+  <path d="M 318 366 Q 326 376 336 378 Q 326 380 318 390 Q 316 380 306 378 Q 316 376 318 366 Z" fill="url(#neonPink)" opacity="0.8" />
 </svg>
