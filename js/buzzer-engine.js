@@ -15,7 +15,6 @@ export class BuzzerEngine {
     this.players = [];
     this.tracks = [];
     this.currentIndex = 0;
-    this.startAudioMode = 'start';
     this.activeBuzzerPlayer = null;
     this.buzzerLocked = false;
     this.answerCountdown = 5;
@@ -28,10 +27,9 @@ export class BuzzerEngine {
     this.onGameOver = null;
   }
 
-  initSession(tracks, playerCount = 2, startAudioMode = 'start', customNames = []) {
+  initSession(tracks, playerCount = 2, customNames = []) {
     this.tracks = tracks;
     this.playerCount = playerCount;
-    this.startAudioMode = startAudioMode;
     this.currentIndex = 0;
     this.isRevealed = false;
 
@@ -62,7 +60,7 @@ export class BuzzerEngine {
     const track = this.getCurrentTrack();
 
     // Démarrage de la musique
-    audioEngine.playTrack(track.previewUrl, this.startAudioMode).catch(e => console.warn(e));
+    audioEngine.playTrack(track.previewUrl).catch(e => console.warn(e));
 
     if (this.onStateChange) {
       this.onStateChange({

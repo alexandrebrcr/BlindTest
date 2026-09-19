@@ -1,5 +1,4 @@
-// Moteur audio HTML5 avec support du départ aléatoire et transitions de volume
-
+// Moteur audio HTML5 optimisé et fiable
 export class AudioEngine {
   constructor() {
     this.audio = new Audio();
@@ -8,8 +7,6 @@ export class AudioEngine {
 
     this.isPlaying = false;
     this.isMuted = false;
-    this.startMode = 'start'; // 'start' (0s) ou 'random' (milieu de l'extrait)
-    this.randomOffset = 0;
     this.maxDuration = 30; // Les extraits iTunes durent 30 secondes
     this.fadeInterval = null;
 
@@ -42,66 +39,29 @@ export class AudioEngine {
     });
   }
 
-  setStartMode(mode) {
-    this.startMode = mode; // 'start' ou 'random'
-  }
-
   setMuted(muted) {
     this.isMuted = muted;
     this.audio.muted = muted;
   }
 
-  // Jouer un morceau avec gestion du point de départ
-  async playTrack(url, startMode = null) {
+  // Jouer un morceau
+  async playTrack(url) {
     this.stop();
-    const mode = startMode || this.startMode;
 
     return new Promise((resolve, reject) => {
       this.audio.src = url;
       this.audio.muted = this.isMuted;
       this.audio.volume = 1.0;
-
-      // Détermination de l'offset cible
-      // Extraits iTunes de 30s : on démarre entre 7s et 16s pour tomber directement au milieu/refrain !
-      const targetOffset = (mode === 'random')
-        ? (Math.floor(Math.random() * 10) + 7) // 7s à 16s
-        : 0;
-
-      this.randomOffset = targetOffset;
-
-      const enforceOffset = () => {
-        if (targetOffset > 0 && Math.abs(this.audio.currentTime - targetOffset) > 1.5) {
-          try {
-            this.audio.currentTime = targetOffset;
-          } catch (err) {
-            console.warn('Erreur réglage currentTime audio:', err);
-          }
-        }
-      };
-
-      // Événement 'playing' : le flux audio a réellement commencé à jouer
-      const onPlaying = () => {
-        this.audio.removeEventListener('playing', onPlaying);
-        enforceOffset();
-        setTimeout(enforceOffset, 120);
-      };
-      this.audio.addEventListener('playing', onPlaying);
+      this.audio.currentTime = 0;
 
       const onCanPlay = () => {
         this.audio.removeEventListener('canplay', onCanPlay);
-
-        if (targetOffset > 0) {
-          enforceOffset();
-        } else {
-          this.audio.currentTime = 0;
-        }
 
         const playPromise = this.audio.play();
         if (playPromise !== undefined) {
           playPromise
             .then(() => {
               this.isPlaying = true;
-              enforceOffset();
               resolve();
             })
             .catch((err) => {

@@ -1,4 +1,4 @@
-﻿// Moteur de jeu Solo (QCM 4 choix & Saisie libre avec tolérance orthographique)
+// Moteur de jeu Solo (QCM 4 choix & Saisie libre avec tolérance orthographique)
 import { sfx } from './sfx.js';
 import { audioEngine } from './audio-player.js';
 
@@ -136,7 +136,7 @@ export class GameEngine {
     this.onGameOver = null;
   }
 
-  startSession(tracks, mode = 'qcm', startMode = 'start') {
+  startSession(tracks, mode = 'qcm') {
     this.tracks = tracks;
     this.currentIndex = 0;
     this.score = 0;
@@ -144,7 +144,6 @@ export class GameEngine {
     this.maxStreak = 0;
     this.correctCount = 0;
     this.gameMode = mode;
-    this.startAudioMode = startMode;
     this.history = [];
     this.isRoundOver = false;
 
@@ -165,8 +164,8 @@ export class GameEngine {
     this.timeLeft = this.roundDuration;
     this.isRoundOver = false;
 
-    // Démarre la lecture audio avec le mode choisi (standard ou aléatoire)
-    audioEngine.playTrack(track.previewUrl, this.startAudioMode).catch((err) => {
+    // Démarre la lecture audio
+    audioEngine.playTrack(track.previewUrl).catch((err) => {
       console.warn('Lecture auto:', err);
     });
 

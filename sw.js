@@ -1,5 +1,5 @@
 // Service Worker pour BlindTest Party PWA
-const CACHE_NAME = 'blindtest-v7';
+const CACHE_NAME = 'blindtest-v10';
 const STATIC_ASSETS = [
   './',
   './index.html',

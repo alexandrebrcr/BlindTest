@@ -496,8 +496,8 @@ const EXTENDED_UNIVERSAL_DECOYS = [
   { title: 'Shape of You', artist: 'Ed Sheeran' },
   { title: 'La terre est ronde', artist: 'Orelsan' },
   { title: 'L\'Aventurier', artist: 'Indochine' },
-  { title: 'Hakuna Matata', artist: 'Le Roi Lion' },
-  { title: 'Ce rêve bleu', artist: 'Aladdin' },
+  { title: 'Can\'t Stop the Feeling!', artist: 'Justin Timberlake' },
+  { title: 'Roar', artist: 'Katy Perry' },
   { title: 'Get Lucky', artist: 'Daft Punk' },
   { title: 'Tous les mêmes', artist: 'Stromae' },
   { title: 'Smells Like Teen Spirit', artist: 'Nirvana' },
@@ -684,18 +684,35 @@ export async function preparePlaylist(category, trackCount = 10, onProgress = nu
   // Détermine si cette partie est axée sur des films / dessins animés / Disney / séries
   const isMovieTheme = category.id === 'disney_dessins_animes' ||
                        category.id === 'cinema_series' ||
-                       (customPrompt && /\b(disney|pixar|dessin|manga|anime|anim[eé]|film|cinema|cin[eé]ma|s[eé]rie|serie|ost|b\.o\.|soundtrack)\b/i.test(customPrompt)) ||
-                       finalTracks.filter(t => !!t.movieTitle).length >= Math.max(1, Math.floor(finalTracks.length / 3));
+                       (Boolean(isCustom && customPrompt) && /\b(disney|pixar|dessin|manga|anime|anim[eé]|film|cinema|cin[eé]ma|s[eé]rie|serie|ost|b\.o\.|soundtrack)\b/i.test(customPrompt));
+
+  if (!isMovieTheme) {
+    // Dans une catégorie musicale normale (Pop, Rap, Rock, Années 80...), on neutralise tout movieTitle
+    // issu des albums de B.O. (ex: "Happy" extrait de l'album Despicable Me 2).
+    // Les morceaux doivent être joués strictement sous forme musicale : Titre du morceau / Artiste, avec des leurres musicaux.
+    for (const t of pool) {
+      t.movieTitle = null;
+      t.movie = null;
+    }
+    for (const t of allFetchedForDecoys) {
+      t.movieTitle = null;
+      t.movie = null;
+    }
+    for (const t of finalTracks) {
+      t.movieTitle = null;
+      t.movie = null;
+    }
+  }
 
   const rawGlobalDecoys = [
     // Priorité 1 : les leurres thématiques ciblés générés par l'IA
-    ...aiDecoys.map(d => ({ title: d.title, artist: d.artist, movieTitle: d.movie || d.movieTitle || null })),
+    ...aiDecoys.map(d => ({ title: d.title, artist: d.artist, movieTitle: isMovieTheme ? (d.movie || d.movieTitle || null) : null })),
     // Priorité 2 : les alternatives réelles issues des recherches iTunes
     ...allFetchedForDecoys,
     // Priorité 3 : les morceaux alternatifs du pool
     ...pool,
     // Priorité 4 : les leurres prédéfinis de la catégorie
-    ...categoryDecoys.map(d => ({ title: d.title, artist: d.artist, movieTitle: d.movie || d.movieTitle || null }))
+    ...categoryDecoys.map(d => ({ title: d.title, artist: d.artist, movieTitle: isMovieTheme ? (d.movie || d.movieTitle || null) : null }))
   ];
 
   // RÈGLE D'OR : En thème film/Disney, aucun leurre sans nom de film/Disney n'a le droit d'entrer !
@@ -709,8 +726,8 @@ export async function preparePlaylist(category, trackCount = 10, onProgress = nu
   const preparedTracks = finalTracks.map((track) => {
     const chosenDecoys = [];
     const shuffledCandidates = shuffleArray(globalDecoys);
-    const trackMovie = track.movieTitle || track.movie || null;
-    const treatAsMovie = isMovieTheme || !!trackMovie;
+    const trackMovie = isMovieTheme ? (track.movieTitle || track.movie || null) : null;
+    const treatAsMovie = isMovieTheme;
 
     // 1ère passe : chercher des candidats non encore utilisés dans toute la partie
     for (const cand of shuffledCandidates) {
@@ -838,10 +855,10 @@ export async function preparePlaylist(category, trackCount = 10, onProgress = nu
     }
 
     const options = shuffleArray([
-      { title: track.title, artist: track.artist, movieTitle: track.movieTitle, isCorrect: true },
-      { title: chosenDecoys[0]?.title || 'Titre Mystère 1', artist: chosenDecoys[0]?.artist || 'Artiste A', movieTitle: chosenDecoys[0]?.movieTitle, isCorrect: false },
-      { title: chosenDecoys[1]?.title || 'Titre Mystère 2', artist: chosenDecoys[1]?.artist || 'Artiste B', movieTitle: chosenDecoys[1]?.movieTitle, isCorrect: false },
-      { title: chosenDecoys[2]?.title || 'Titre Mystère 3', artist: chosenDecoys[2]?.artist || 'Artiste C', movieTitle: chosenDecoys[2]?.movieTitle, isCorrect: false }
+      { title: track.title, artist: track.artist, movieTitle: isMovieTheme ? track.movieTitle : null, isCorrect: true },
+      { title: chosenDecoys[0]?.title || 'Titre Mystère 1', artist: chosenDecoys[0]?.artist || 'Artiste A', movieTitle: isMovieTheme ? chosenDecoys[0]?.movieTitle : null, isCorrect: false },
+      { title: chosenDecoys[1]?.title || 'Titre Mystère 2', artist: chosenDecoys[1]?.artist || 'Artiste B', movieTitle: isMovieTheme ? chosenDecoys[1]?.movieTitle : null, isCorrect: false },
+      { title: chosenDecoys[2]?.title || 'Titre Mystère 3', artist: chosenDecoys[2]?.artist || 'Artiste C', movieTitle: isMovieTheme ? chosenDecoys[2]?.movieTitle : null, isCorrect: false }
     ]);
 
     return {

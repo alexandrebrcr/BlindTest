@@ -951,7 +951,8 @@ html, body {
 
 /* Positionnement fixé et centrage garanti pour toutes les modales globales */
 #modal-ai-settings,
-#modal-instructions {
+#modal-instructions,
+#modal-confirm {
   position: fixed !important;
   top: 0 !important;
   left: 0 !important;
@@ -971,19 +972,43 @@ html, body {
 }
 
 #modal-ai-settings,
-#modal-instructions {
+#modal-instructions,
+#modal-confirm {
   display: none;
 }
 
 #modal-ai-settings.active,
-#modal-instructions.active {
+#modal-instructions.active,
+#modal-confirm.active {
   display: flex !important;
   animation: zoomModal 0.2s ease-out !important;
 }
 
 #modal-ai-settings .glass-card,
-#modal-instructions .glass-card {
+#modal-instructions .glass-card,
+#modal-confirm .glass-card {
   max-height: 88vh;
   overflow-y: auto;
   margin: auto;
+}
+
+.btn-danger {
+  background: linear-gradient(135deg, #ff416c, #ff4b2b);
+  color: #fff;
+  font-weight: 800;
+  border: none;
+  border-radius: 99px;
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(255, 65, 108, 0.35);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.btn-danger:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 65, 108, 0.5);
+}
+
+.btn-danger:active {
+  transform: translateY(0);
 }

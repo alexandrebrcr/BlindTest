@@ -13,7 +13,6 @@ const state = {
   currentMode: 'qcm',          // 'qcm', 'text', 'buzzer', 'host', 'room-host', 'room-join'
   selectedCategoryId: 'rap_fr',
   trackCount: 10,
-  startAudioMode: 'start',     // 'start' (0s) ou 'random' (milieu de l'extrait)
   buzzerPlayerCount: 2,
   clientSelectedColor: PLAYER_COLORS[0].hex,
   currentPlaylist: [],
@@ -38,6 +37,69 @@ function showScreen(screenId) {
     target.classList.add('active');
     window.scrollTo(0, 0);
   }
+}
+
+// ==========================================================================
+// 1.1 Modale de Confirmation pour Quitter une Partie
+// ==========================================================================
+let activeConfirmCallback = null;
+let audioPausedForConfirm = false;
+
+function requestQuitConfirmation({ title = 'Quitter la partie ?', message = 'Votre progression actuelle sera perdue. Voulez-vous vraiment quitter ?', onConfirm }) {
+  const modal = document.getElementById('modal-confirm');
+  if (!modal) {
+    if (window.confirm(message)) {
+      onConfirm();
+    }
+    return;
+  }
+
+  const titleEl = document.getElementById('confirm-modal-title');
+  const msgEl = document.getElementById('confirm-modal-message');
+  if (titleEl) titleEl.textContent = title;
+  if (msgEl) msgEl.textContent = message;
+
+  // Mise en pause temporaire de l'audio si un morceau est en train de jouer
+  if (audioEngine.isPlaying) {
+    audioPausedForConfirm = true;
+    audioEngine.pause();
+  } else {
+    audioPausedForConfirm = false;
+  }
+
+  activeConfirmCallback = () => {
+    modal.classList.remove('active');
+    activeConfirmCallback = null;
+    audioPausedForConfirm = false;
+    onConfirm();
+  };
+
+  const cancelBtn = document.getElementById('btn-confirm-cancel');
+  const okBtn = document.getElementById('btn-confirm-ok');
+
+  const closeAndResume = () => {
+    modal.classList.remove('active');
+    activeConfirmCallback = null;
+    if (audioPausedForConfirm) {
+      audioPausedForConfirm = false;
+      audioEngine.resume();
+    }
+  };
+
+  cancelBtn.onclick = closeAndResume;
+  okBtn.onclick = () => {
+    if (activeConfirmCallback) {
+      activeConfirmCallback();
+    }
+  };
+
+  modal.onclick = (e) => {
+    if (e.target === modal) {
+      closeAndResume();
+    }
+  };
+
+  modal.classList.add('active');
 }
 
 // ==========================================================================
@@ -268,16 +330,6 @@ function initSettings() {
     });
   });
 
-  // Départ audio (Classique 0s vs Aléatoire)
-  const startModeOpts = document.querySelectorAll('#opt-start-mode .pill-option');
-  startModeOpts.forEach(btn => {
-    btn.addEventListener('click', () => {
-      sfx.init();
-      startModeOpts.forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      state.startAudioMode = btn.dataset.value;
-    });
-  });
 
   // Nombre de joueurs pour le buzzer
   const playerCountOpts = document.querySelectorAll('#opt-player-count .pill-option');
@@ -303,9 +355,26 @@ function initSettings() {
 
   // Boutons Retour Accueil & Rejouer
   document.getElementById('btn-brand-home').addEventListener('click', () => {
-    audioEngine.stop();
-    gameEngine.stopTimer();
-    showScreen('screen-home');
+    const activeScreen = document.querySelector('.screen.active');
+    const isGameActive = activeScreen && ['screen-solo', 'screen-host', 'screen-room-host-game', 'screen-room-client-buzzer'].includes(activeScreen.id) || document.getElementById('screen-buzzer')?.classList.contains('active');
+
+    if (isGameActive) {
+      requestQuitConfirmation({
+        title: 'Quitter la partie ?',
+        message: 'Une partie est en cours. Voulez-vous vraiment retourner à l\'accueil ? Votre progression sera perdue.',
+        onConfirm: () => {
+          audioEngine.stop();
+          gameEngine.stopTimer();
+          if (roomHost.peer) roomHost.destroy();
+          if (roomClient.peer) roomClient.destroy();
+          const buzzerScreen = document.getElementById('screen-buzzer');
+          if (buzzerScreen) buzzerScreen.classList.remove('active');
+          showScreen('screen-home');
+        }
+      });
+    } else {
+      showScreen('screen-home');
+    }
   });
 
   document.getElementById('btn-back-menu').addEventListener('click', () => {
@@ -316,8 +385,14 @@ function initSettings() {
 
   // Boutons pour quitter les écrans salon
   document.getElementById('btn-quit-lobby').onclick = () => {
-    roomHost.destroy();
-    showScreen('screen-home');
+    requestQuitConfirmation({
+      title: 'Annuler le salon ?',
+      message: 'Voulez-vous vraiment fermer ce salon ? Les joueurs en attente seront déconnectés.',
+      onConfirm: () => {
+        roomHost.destroy();
+        showScreen('screen-home');
+      }
+    });
   };
 
   document.getElementById('btn-quit-client-join').onclick = () => {
@@ -397,6 +472,18 @@ async function startGame() {
   }
 }
 
+// Détermine si la partie en cours est dédiée aux films / dessins animés / Disney / séries
+function isMovieCategoryActive() {
+  if (state.selectedCategoryId === 'disney_dessins_animes' || state.selectedCategoryId === 'cinema_series') {
+    return true;
+  }
+  if (state.selectedCategoryId === 'custom_theme') {
+    const prompt = (document.getElementById('input-custom-theme')?.value || '').trim();
+    return /\b(disney|pixar|dessin|manga|anime|anim[eé]|film|cinema|cin[eé]ma|s[eé]rie|serie|ost|b\.o\.|soundtrack)\b/i.test(prompt);
+  }
+  return false;
+}
+
 // ==========================================================================
 // 4. Mode Solo (QCM & Saisie Libre)
 // ==========================================================================
@@ -437,9 +524,7 @@ function startSoloGame(tracks) {
       vinylDisc.classList.add('spinning');
 
       // Réinitialisation des textes
-      const isMovieCategory = state.selectedCategoryId === 'disney_dessins_animes' ||
-                              state.selectedCategoryId === 'cinema_series' ||
-                              !!e.track.movieTitle;
+      const isMovieCategory = isMovieCategoryActive();
       document.getElementById('solo-reveal-title').textContent = 'Écoutez bien...';
       document.getElementById('solo-reveal-artist').textContent = isMovieCategory ? 'Quel est ce film / dessin animé ?' : 'Quel est ce titre / artiste ?';
       document.getElementById('solo-reveal-meta').textContent = '';
@@ -494,8 +579,9 @@ function startSoloGame(tracks) {
     mysteryIcon.classList.add('hidden');
     timerFill.style.width = '0%';
 
+    const isMovieCategory = isMovieCategoryActive();
     const movieName = res.track.movieTitle || res.track.movie;
-    if (movieName) {
+    if (isMovieCategory && movieName) {
       document.getElementById('solo-reveal-title').textContent = `🎬 ${movieName}`;
       document.getElementById('solo-reveal-artist').textContent = `Morceau : "${res.track.title}" • ${res.track.artist}`;
     } else {
@@ -532,11 +618,12 @@ function startSoloGame(tracks) {
     document.getElementById('gameover-correct').textContent = `${summary.correctCount}/${summary.totalTracks}`;
     document.getElementById('gameover-maxstreak').textContent = summary.maxStreak;
 
+    const isMovieCategory = isMovieCategoryActive();
     // Historique des morceaux avec réécoute
     const listEl = document.getElementById('gameover-history-list');
     listEl.innerHTML = summary.history.map(item => {
       const movieName = item.track.movieTitle || item.track.movie;
-      const displayTitle = movieName ? `🎬 ${movieName} (${item.track.title})` : item.track.title;
+      const displayTitle = (isMovieCategory && movieName) ? `🎬 ${movieName} (${item.track.title})` : item.track.title;
       return `
         <div class="history-item">
           <div style="display: flex; align-items: center; gap: 0.6rem;">
@@ -556,7 +643,7 @@ function startSoloGame(tracks) {
 
     listEl.querySelectorAll('.btn-history-play').forEach(btn => {
       btn.addEventListener('click', () => {
-        audioEngine.playTrack(btn.dataset.url, 'start');
+        audioEngine.playTrack(btn.dataset.url);
       });
     });
   };
@@ -574,8 +661,24 @@ function startSoloGame(tracks) {
   btnNext.onclick = () => gameEngine.nextRound();
   btnSkip.onclick = () => gameEngine.submitAnswer(null);
 
+  // Bouton Quitter la partie solo
+  const btnSoloQuit = document.getElementById('btn-solo-quit');
+  if (btnSoloQuit) {
+    btnSoloQuit.onclick = () => {
+      requestQuitConfirmation({
+        title: 'Quitter la partie Solo ?',
+        message: 'Votre manche en cours et votre score actuel seront réinitialisés. Voulez-vous vraiment quitter ?',
+        onConfirm: () => {
+          audioEngine.stop();
+          gameEngine.stopTimer();
+          showScreen('screen-home');
+        }
+      });
+    };
+  }
+
   // Lancement
-  gameEngine.startSession(tracks, state.currentMode, state.startAudioMode);
+  gameEngine.startSession(tracks, state.currentMode);
 }
 
 // ==========================================================================
@@ -643,9 +746,11 @@ function startBuzzerGame(tracks) {
       buzzerModal.classList.remove('active');
       buzzerRevealModal.classList.add('active');
 
+      const isMovieCategory = isMovieCategoryActive();
+      const movieName = evt.track.movieTitle || evt.track.movie;
       document.getElementById('buzzer-reveal-img').src = evt.track.artworkUrl || './assets/icons/icon.svg';
-      document.getElementById('buzzer-reveal-title').textContent = evt.track.title;
-      document.getElementById('buzzer-reveal-artist').textContent = evt.track.artist;
+      document.getElementById('buzzer-reveal-title').textContent = (isMovieCategory && movieName) ? `🎬 ${movieName}` : evt.track.title;
+      document.getElementById('buzzer-reveal-artist').textContent = (isMovieCategory && movieName) ? `Morceau : "${evt.track.title}" • ${evt.track.artist}` : evt.track.artist;
       document.getElementById('buzzer-reveal-meta').textContent = `${evt.track.year || ''} • ${evt.track.genre || ''}`;
 
       const pointAwardedEl = document.getElementById('buzzer-point-awarded');
@@ -679,9 +784,15 @@ function startBuzzerGame(tracks) {
 
   // Bouton Quitter
   document.getElementById('btn-buzzer-exit').onclick = () => {
-    audioEngine.stop();
-    buzzerScreen.classList.remove('active');
-    showScreen('screen-home');
+    requestQuitConfirmation({
+      title: 'Quitter le mode Buzzer ?',
+      message: 'Voulez-vous vraiment abandonner la partie de buzzer ? Les scores des joueurs seront perdus.',
+      onConfirm: () => {
+        audioEngine.stop();
+        buzzerScreen.classList.remove('active');
+        showScreen('screen-home');
+      }
+    });
   };
 
   buzzerEngine.onGameOver = (res) => {
@@ -705,7 +816,7 @@ function startBuzzerGame(tracks) {
     `).join('');
   };
 
-  buzzerEngine.initSession(tracks, state.buzzerPlayerCount, state.startAudioMode);
+  buzzerEngine.initSession(tracks, state.buzzerPlayerCount);
 }
 
 // ==========================================================================
@@ -777,7 +888,7 @@ function startHostGame(tracks) {
     document.getElementById('host-track-artist').textContent = track.artist;
     document.getElementById('host-track-year').textContent = `${track.year || ''} • ${track.genre || ''}`;
 
-    audioEngine.playTrack(track.previewUrl, state.startAudioMode);
+    audioEngine.playTrack(track.previewUrl);
     btnPlayPause.textContent = '⏸️';
   }
 
@@ -798,7 +909,7 @@ function startHostGame(tracks) {
 
   btnRewind.onclick = () => {
     const track = tracks[currentTrackIdx];
-    audioEngine.playTrack(track.previewUrl, state.startAudioMode);
+    audioEngine.playTrack(track.previewUrl);
     btnPlayPause.textContent = '⏸️';
   };
 
@@ -807,8 +918,14 @@ function startHostGame(tracks) {
   };
 
   document.getElementById('btn-host-quit').onclick = () => {
-    audioEngine.stop();
-    showScreen('screen-home');
+    requestQuitConfirmation({
+      title: 'Quitter le mode Soirée ?',
+      message: 'Voulez-vous vraiment quitter ? Les scores des équipes seront réinitialisés.',
+      onConfirm: () => {
+        audioEngine.stop();
+        showScreen('screen-home');
+      }
+    });
   };
 
   renderTeams();
@@ -1000,7 +1117,7 @@ function startOnlineHostGame(tracks) {
     buzzReveal.style.display = 'none';
 
     // Démarrage audio et broadcast aux téléphones
-    audioEngine.playTrack(track.previewUrl, state.startAudioMode);
+    audioEngine.playTrack(track.previewUrl);
     roomHost.startRound(currentIdx, tracks.length);
     updateLeaderboard(roomHost.getPlayersList());
   }
@@ -1018,6 +1135,14 @@ function startOnlineHostGame(tracks) {
     buzzPlayerTitle.style.color = player.color;
   };
 
+  function showOnlineReveal(track) {
+    const isMovieCategory = isMovieCategoryActive();
+    const movieName = track.movieTitle || track.movie;
+    document.getElementById('online-reveal-title').textContent = (isMovieCategory && movieName) ? `🎬 ${movieName}` : track.title;
+    document.getElementById('online-reveal-artist').textContent = (isMovieCategory && movieName) ? `Morceau : "${track.title}" • ${track.artist}` : track.artist;
+    document.getElementById('online-reveal-meta').textContent = `${track.year || ''} • ${track.genre || ''}`;
+  }
+
   // Verdict Hôte : Bonne réponse (+1)
   document.getElementById('btn-online-verdict-correct').onclick = () => {
     sfx.playCorrect();
@@ -1029,9 +1154,7 @@ function startOnlineHostGame(tracks) {
 
     buzzActive.style.display = 'none';
     buzzReveal.style.display = 'block';
-    document.getElementById('online-reveal-title').textContent = track.title;
-    document.getElementById('online-reveal-artist').textContent = track.artist;
-    document.getElementById('online-reveal-meta').textContent = `${track.year || ''} • ${track.genre || ''}`;
+    showOnlineReveal(track);
 
     updateLeaderboard(roomHost.getPlayersList());
   };
@@ -1054,9 +1177,7 @@ function startOnlineHostGame(tracks) {
       mysteryIcon.classList.add('hidden');
       buzzActive.style.display = 'none';
       buzzReveal.style.display = 'block';
-      document.getElementById('online-reveal-title').textContent = track.title;
-      document.getElementById('online-reveal-artist').textContent = track.artist;
-      document.getElementById('online-reveal-meta').textContent = `${track.year || ''} • ${track.genre || ''}`;
+      showOnlineReveal(track);
     }
   };
 
@@ -1071,9 +1192,7 @@ function startOnlineHostGame(tracks) {
     buzzWaiting.style.display = 'none';
     buzzActive.style.display = 'none';
     buzzReveal.style.display = 'block';
-    document.getElementById('online-reveal-title').textContent = track.title;
-    document.getElementById('online-reveal-artist').textContent = track.artist;
-    document.getElementById('online-reveal-meta').textContent = `${track.year || ''} • ${track.genre || ''}`;
+    showOnlineReveal(track);
   };
 
   // Bouton Manche suivante
@@ -1083,9 +1202,15 @@ function startOnlineHostGame(tracks) {
 
   // Quitter
   document.getElementById('btn-online-host-quit').onclick = () => {
-    audioEngine.stop();
-    roomHost.destroy();
-    showScreen('screen-home');
+    requestQuitConfirmation({
+      title: 'Fermer le Salon Multijoueur ?',
+      message: 'Voulez-vous vraiment interrompre la partie ? La connexion sera coupée pour tous les smartphones connectés.',
+      onConfirm: () => {
+        audioEngine.stop();
+        roomHost.destroy();
+        showScreen('screen-home');
+      }
+    });
   };
 
   loadOnlineRound(0);
@@ -1156,6 +1281,21 @@ function initRoomClientFlow(roomCode, playerName, playerColor) {
   };
   buzzBtn.addEventListener('touchstart', onBuzz, { passive: false });
   buzzBtn.addEventListener('mousedown', onBuzz);
+
+  // Quitter le salon depuis le smartphone
+  const btnClientQuit = document.getElementById('btn-client-quit-room');
+  if (btnClientQuit) {
+    btnClientQuit.onclick = () => {
+      requestQuitConfirmation({
+        title: 'Quitter le salon ?',
+        message: 'Voulez-vous vraiment quitter ce salon et vous déconnecter ?',
+        onConfirm: () => {
+          roomClient.destroy();
+          showScreen('screen-home');
+        }
+      });
+    };
+  }
 }
 
 // ==========================================================================
