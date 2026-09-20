@@ -190,6 +190,7 @@ export function getTrackQualityScore(item, query = '', expectedArtist = null, ex
   const q = (query || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
   const title = (item.trackName || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
   const album = (item.collectionName || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  const artist = (item.artistName || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
   const genre = (item.primaryGenreName || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
   const combined = `${title} ${album} ${artist} ${genre}`;
 
