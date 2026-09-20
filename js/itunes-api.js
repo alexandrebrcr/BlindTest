@@ -287,8 +287,14 @@ export async function searchTrack(query, country = 'FR', movieHint = null, expec
   const url = `https://itunes.apple.com/search?term=${encodedQuery}&country=${country}&entity=song&limit=25`;
 
   try {
-    const response = await fetch(url);
-    if (!response.ok) return [];
+    let response;
+    try {
+      response = await fetch(url);
+    } catch (netErr) {
+      // Nouvelle tentative rapide en cas de micro-coupure réseau
+      response = await fetch(url);
+    }
+    if (!response || !response.ok) return [];
     const data = await response.json();
 
     const rawTracks = (data.results || [])
@@ -658,23 +664,34 @@ export async function preparePlaylist(category, trackCount = 10, onProgress = nu
       : (category.queries || []);
 
     const shuffledQueries = shuffleArray(queriesToUse);
+    const country = category.country || 'FR';
 
-    for (const q of shuffledQueries) {
-      const results = await searchTrack(q, category.country || 'FR');
+    // Traitement par lots de 5 requêtes en parallèle (5x plus rapide, < 1s)
+    const BATCH_SIZE = 5;
+    for (let i = 0; i < shuffledQueries.length; i += BATCH_SIZE) {
+      const batch = shuffledQueries.slice(i, i + BATCH_SIZE);
+      const batchResults = await Promise.all(
+        batch.map(q => searchTrack(q, country))
+      );
 
-      // On conserve tous les résultats pour les leurres
-      for (const track of results) {
-        allFetchedForDecoys.push(track);
-      }
-
-      // N'ajouter qu'un seul morceau par recherche
-      const shuffledResults = shuffleArray(results);
-      for (const track of shuffledResults) {
-        if (addTrackToPool(track)) {
-          break;
+      for (const results of batchResults) {
+        for (const track of results) {
+          allFetchedForDecoys.push(track);
+        }
+        const shuffledResults = shuffleArray(results);
+        for (const track of shuffledResults) {
+          if (addTrackToPool(track)) {
+            break;
+          }
         }
       }
-      if (pool.length >= trackCount + 4) break;
+
+      if (onProgress) {
+        const percent = Math.min(95, 40 + Math.round((pool.length / trackCount) * 55));
+        onProgress(percent, isCustom ? "Génération du contenu sur votre thème..." : "Génération du contenu de la playlist...");
+      }
+
+      if (pool.length >= trackCount + 3) break;
     }
 
     // Filet de sécurité ultime pour garantir à 100% le nombre de morceaux choisi par l'utilisateur

@@ -227,7 +227,7 @@ export const CATEGORIES = [
     color: '#9d00ff',
     description: 'Les méga-hits mondiaux qui cartonnent sur toutes les radios',
     aiTheme: 'Les méga-hits de la pop internationale moderne des années 2010 à aujourd\'hui',
-    country: 'US',
+    country: 'FR',
     queries: [
       'Taylor Swift shake it off', 'The Weeknd blinding lights', 'Dua Lipa levitating',
       'Bruno Mars uptown funk', 'Billie Eilish bad guy', 'Ed Sheeran shape of you',
@@ -238,7 +238,9 @@ export const CATEGORIES = [
       'Shawn Mendes senorita', 'Sam Smith stay with me', 'Post Malone circles',
       'Lizzo about damn time', 'Olivia Rodrigo drivers license', 'Camila Cabello havana',
       'Beyonce single ladies', 'Rihanna diamonds', 'Avicii wake me up',
-      'Pitbull give me everything', 'David Guetta titanium', 'Justin Timberlake can\'t stop the feeling'
+      'Pitbull give me everything', 'David Guetta titanium', 'Justin Timberlake can\'t stop the feeling',
+      'Daft Punk get lucky', 'OneRepublic counting stars', 'Sia cheap thrills',
+      'Avicii the nights', 'Calvin Harris one kiss', 'Ed Sheeran bad habits'
     ],
     decoys: [
       { title: 'Shake It Off', artist: 'Taylor Swift' },

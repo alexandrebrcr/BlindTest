@@ -1,5 +1,5 @@
 // Service Worker pour BlindTest Party PWA
-const CACHE_NAME = 'blindtest-v12';
+const CACHE_NAME = 'blindtest-v13';
 const STATIC_ASSETS = [
   './',
   './index.html',
@@ -43,14 +43,14 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // Ne pas intercepter les requêtes audio ou API externes
+  // Ne pas intercepter les requêtes audio ou API externes : laisser le navigateur gérer nativement sans surcouche SW
   if (
     event.request.url.includes('itunes.apple.com') ||
     event.request.url.includes('mzstatic.com') ||
     event.request.url.includes('pollinations.ai') ||
-    event.request.url.includes('googleapis.com')
+    event.request.url.includes('googleapis.com') ||
+    (event.request.url.startsWith('http') && !event.request.url.startsWith(self.location.origin))
   ) {
-    event.respondWith(fetch(event.request));
     return;
   }
 
