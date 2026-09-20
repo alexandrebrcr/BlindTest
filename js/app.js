@@ -438,7 +438,7 @@ async function startGame() {
     ? `✨ ${customPrompt}`
     : `${category.icon} ${category.name}`;
   document.getElementById('loading-category-name').textContent = catDisplayName;
-  document.getElementById('loading-subtext').textContent = 'Extraction des pépites musicales...';
+  document.getElementById('loading-subtext').textContent = 'Génération du contenu en cours...';
   const progressFill = document.getElementById('loading-progress-fill');
   progressFill.style.width = '10%';
 
@@ -764,12 +764,40 @@ function startBuzzerGame(tracks) {
     }
   };
 
+  const buzzPeekBtn = document.getElementById('btn-buzz-peek-answer');
+  const buzzPeekPreview = document.getElementById('buzz-secret-answer-preview');
+  const buzzPeekTitle = document.getElementById('buzz-peek-title');
+  const buzzPeekArtist = document.getElementById('buzz-peek-artist');
+
+  if (buzzPeekBtn && buzzPeekPreview) {
+    buzzPeekBtn.onclick = () => {
+      const isHidden = buzzPeekPreview.style.display === 'none' || !buzzPeekPreview.style.display;
+      buzzPeekPreview.style.display = isHidden ? 'block' : 'none';
+      buzzPeekBtn.textContent = isHidden ? '🙈 Masquer la réponse' : '👁️ Vérifier la réponse';
+    };
+  }
+
   buzzerEngine.onBuzzed = (player) => {
     buzzerModal.classList.add('active');
     const winnerEl = document.getElementById('buzz-winner-name');
     winnerEl.textContent = `${player.name} a buzzé !`;
     winnerEl.style.color = player.color;
     document.getElementById('buzz-modal-countdown').textContent = '5';
+
+    // Réinitialiser l'état masqué et mettre à jour le morceau en cours
+    if (buzzPeekPreview && buzzPeekBtn) {
+      buzzPeekPreview.style.display = 'none';
+      buzzPeekBtn.textContent = '👁️ Vérifier la réponse';
+      const currentTrack = buzzerEngine.getCurrentTrack();
+      if (currentTrack) {
+        const isMovie = isMovieCategoryActive();
+        const movieName = currentTrack.movieTitle || currentTrack.movie;
+        buzzPeekTitle.textContent = (isMovie && movieName) ? `🎬 ${movieName}` : currentTrack.title;
+        buzzPeekArtist.textContent = (isMovie && movieName)
+          ? `Morceau : "${currentTrack.title}" • ${currentTrack.artist}`
+          : `${currentTrack.artist}${currentTrack.year ? ` (${currentTrack.year})` : ''}`;
+      }
+    }
   };
 
   // Boutons du verdict de l'arbitre
@@ -1043,7 +1071,7 @@ function initRoomHostFlow() {
       ? customPrompt
       : category.name;
     document.getElementById('loading-category-name').textContent = `Salon ${roomHost.roomCode} - ${catDisplayName}`;
-    document.getElementById('loading-subtext').textContent = 'Préparation des morceaux...';
+    document.getElementById('loading-subtext').textContent = 'Génération du contenu en cours...';
 
     const progressFill = document.getElementById('loading-progress-fill');
     if (progressFill) progressFill.style.width = '10%';
@@ -1082,6 +1110,32 @@ function startOnlineHostGame(tracks) {
   const buzzPlayerTitle = document.getElementById('online-buzzed-player-title');
   const leaderboardList = document.getElementById('online-leaderboard-list');
 
+  const onlinePeekBtn = document.getElementById('btn-online-peek-answer');
+  const onlinePeekPreview = document.getElementById('online-secret-answer-preview');
+  const onlinePeekTitle = document.getElementById('online-peek-title');
+  const onlinePeekArtist = document.getElementById('online-peek-artist');
+
+  const onlineWaitingPeekBtn = document.getElementById('btn-online-waiting-peek');
+  const onlineWaitingPeekPreview = document.getElementById('online-waiting-secret-preview');
+  const onlineWaitingPeekTitle = document.getElementById('online-waiting-peek-title');
+  const onlineWaitingPeekArtist = document.getElementById('online-waiting-peek-artist');
+
+  if (onlinePeekBtn && onlinePeekPreview) {
+    onlinePeekBtn.onclick = () => {
+      const isHidden = onlinePeekPreview.style.display === 'none' || !onlinePeekPreview.style.display;
+      onlinePeekPreview.style.display = isHidden ? 'block' : 'none';
+      onlinePeekBtn.textContent = isHidden ? '🙈 Masquer la réponse' : '👁️ Vérifier la réponse';
+    };
+  }
+
+  if (onlineWaitingPeekBtn && onlineWaitingPeekPreview) {
+    onlineWaitingPeekBtn.onclick = () => {
+      const isHidden = onlineWaitingPeekPreview.style.display === 'none' || !onlineWaitingPeekPreview.style.display;
+      onlineWaitingPeekPreview.style.display = isHidden ? 'block' : 'none';
+      onlineWaitingPeekBtn.textContent = isHidden ? '🙈 Masquer la réponse' : '👁️ Voir la réponse';
+    };
+  }
+
   function updateLeaderboard(players) {
     const sorted = [...players].sort((a, b) => b.score - a.score);
     leaderboardList.innerHTML = sorted.map(p => `
@@ -1116,6 +1170,28 @@ function startOnlineHostGame(tracks) {
     buzzActive.style.display = 'none';
     buzzReveal.style.display = 'none';
 
+    // Réinitialisation des aperçus de réponse secrète pour l'hôte
+    if (onlinePeekPreview && onlinePeekBtn) {
+      onlinePeekPreview.style.display = 'none';
+      onlinePeekBtn.textContent = '👁️ Vérifier la réponse';
+    }
+    if (onlineWaitingPeekPreview && onlineWaitingPeekBtn) {
+      onlineWaitingPeekPreview.style.display = 'none';
+      onlineWaitingPeekBtn.textContent = '👁️ Voir la réponse';
+    }
+
+    const isMovie = isMovieCategoryActive();
+    const movieName = track.movieTitle || track.movie;
+    const dispTitle = (isMovie && movieName) ? `🎬 ${movieName}` : track.title;
+    const dispArtist = (isMovie && movieName)
+      ? `Morceau : "${track.title}" • ${track.artist}`
+      : `${track.artist}${track.year ? ` (${track.year})` : ''}`;
+
+    if (onlinePeekTitle) onlinePeekTitle.textContent = dispTitle;
+    if (onlinePeekArtist) onlinePeekArtist.textContent = dispArtist;
+    if (onlineWaitingPeekTitle) onlineWaitingPeekTitle.textContent = dispTitle;
+    if (onlineWaitingPeekArtist) onlineWaitingPeekArtist.textContent = dispArtist;
+
     // Démarrage audio et broadcast aux téléphones
     audioEngine.playTrack(track.previewUrl);
     roomHost.startRound(currentIdx, tracks.length);
@@ -1130,6 +1206,11 @@ function startOnlineHostGame(tracks) {
     buzzWaiting.style.display = 'none';
     buzzActive.style.display = 'block';
     buzzReveal.style.display = 'none';
+
+    if (onlinePeekPreview && onlinePeekBtn) {
+      onlinePeekPreview.style.display = 'none';
+      onlinePeekBtn.textContent = '👁️ Vérifier la réponse';
+    }
 
     buzzPlayerTitle.textContent = `${player.name} a buzzé ! ⚡`;
     buzzPlayerTitle.style.color = player.color;

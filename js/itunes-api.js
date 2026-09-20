@@ -83,24 +83,26 @@ const KNOWN_FRANCHISES = [
 export function cleanTitle(rawTitle) {
   if (!rawTitle) return '';
   return rawTitle
-    .replace(/\s*\(.*?(remaster|version|edit|live|deluxe|bonus|anniversary|ost|soundtrack|feat|explicit|bande originale|b\.o\.|de "|from "|du film).*?\)/gi, '')
-    .replace(/\s*\[.*?(remaster|version|edit|live|deluxe|bonus|anniversary|ost|soundtrack|feat|explicit|bande originale|b\.o\.|de "|from "|du film).*?\]/gi, '')
+    .replace(/\s*\(.*?(remaster|version|edit|live|deluxe|bonus|anniversary|ost|soundtrack|feat|explicit|bande originale|b\.o\.|de "|from "|du film|th[eè]me|g[eé]n[eé]rique).*?\)/gi, '')
+    .replace(/\s*\[.*?(remaster|version|edit|live|deluxe|bonus|anniversary|ost|soundtrack|feat|explicit|bande originale|b\.o\.|de "|from "|du film|th[eè]me|g[eé]n[eé]rique).*?\]/gi, '')
     .replace(/\s*-\s*(remaster|live|radio edit|deluxe|single version|bande originale|b\.o\.|from ).*/gi, '')
     .trim();
 }
 
 // Extraction du nom de film, série ou animé
 export function extractMovieName(rawTitle, collectionName, queryText = null, movieHint = null) {
-  const combined = `${rawTitle || ''} ${collectionName || ''} ${queryText || ''} ${movieHint || ''}`;
+  // 1. Indication explicite de film/dessin animé (par ex. fournie par le catalogue)
+  if (movieHint) return movieHint;
 
-  // 1. Chercher dans les franchises et films cultes connus
+  // 2. Chercher dans les franchises et films cultes connus UNIQUEMENT dans le titre et l'album
+  const trackAndAlbum = `${rawTitle || ''} ${collectionName || ''}`;
   for (const franchise of KNOWN_FRANCHISES) {
-    if (franchise.patterns.some(regex => regex.test(combined))) {
+    if (franchise.patterns.some(regex => regex.test(trackAndAlbum))) {
       return franchise.name;
     }
   }
 
-  // 2. Chercher dans les parenthèses ou guillemets du titre
+  // 3. Chercher dans les parenthèses ou guillemets du titre (ex: de "Tarzan", from "The Lion King")
   if (rawTitle) {
     const fromMatch = rawTitle.match(/(?:from|de|du film)\s+["'«]([^"'»]+)["'»]/i);
     if (fromMatch && fromMatch[1]) {
@@ -112,7 +114,7 @@ export function extractMovieName(rawTitle, collectionName, queryText = null, mov
     }
   }
 
-  // 3. Chercher dans le nom de l'album / collection
+  // 4. Chercher dans le nom de l'album / collection
   if (collectionName) {
     const ostMatch = collectionName.match(/(.+?)\s*(?:\(original soundtrack|\(b\.o\.|\(soundtrack|\(bande originale|original score|ost\))/i);
     if (ostMatch && ostMatch[1]) {
@@ -123,7 +125,7 @@ export function extractMovieName(rawTitle, collectionName, queryText = null, mov
     }
   }
 
-  return movieHint || null;
+  return null;
 }
 
 // Fonction de mélange de tableau (Fisher-Yates)
@@ -188,14 +190,21 @@ export function getTrackQualityScore(item, query = '', expectedArtist = null, ex
   const q = (query || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
   const title = (item.trackName || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
   const album = (item.collectionName || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-  const artist = (item.artistName || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-  const combined = `${title} ${album} ${artist}`;
+  const genre = (item.primaryGenreName || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  const combined = `${title} ${album} ${artist} ${genre}`;
 
   // 1. Rejet strict des reprises, quatuors, orchestres, berceuses, karaokés (ex: Vitamin String Quartet)
   const isKnockoff = !q.includes('karaoke') && !q.includes('instrumental') && !q.includes('orchestra') && !q.includes('tribute') &&
     /\b(karaoke|karaok[eé]|instrumental|tribute|tribute band|cover|cover band|covers|backing track|made famous by|in the style of|piano project|hit crew|all stars|orchestral tribute|sing king|string quartet|quartet|quatuor|orchestra|orchestre|philharmonic|symphony|symphonique|lullaby|berceuse|rockabye|kids united|chipmunks|ayoub sisters|piano version|piano solo|relaxing piano|guitar version|acoustic hits|sleep music|nursery|smooth jazz|music box|hommage|reprise)\b/i.test(combined);
 
   if (isKnockoff) return -100;
+
+  // 1b. Rejet strict des bruitages, sons de la nature, bruits colorés (vert, blanc, rose, brun), méditation, relaxation, sommeil
+  const isBruitage = !q.includes('bruitage') && !q.includes('sound effect') && !q.includes('meditation') &&
+    (/\b(bruitage|bruitages|sound effects?|sfx|nature sounds?|white noise|bruit blanc|bruit vert|green noise|bruit rose|pink noise|bruit brun|brown noise|sound of wind|bruit du vent|ambient sound|relaxation|meditation|sleep sounds?|asmr|wind sound|storm sound|rain sound|bruit de la pluie|vagues|waves|birds singing|chant des oiseaux|sommeil|dormir|concentration|etude|[eé]tude|binaural)\b/i.test(combined) ||
+     /\b(meditation|m[eé]ditation|relaxation|spoken word|white noise)\b/i.test(genre));
+
+  if (isBruitage) return -100;
 
   // 2. Détection des versions indésirables (live, acoustique, remix, démo)
   const isLive = !q.includes('live') && !q.includes('concert') &&
@@ -458,6 +467,8 @@ const UNIVERSAL_MOVIE_DECOYS = [
   { title: 'C\'est la fête', artist: 'La Belle et la Bête', movieTitle: 'La Belle et la Bête' },
   { title: 'Belle', artist: 'La Belle et la Bête', movieTitle: 'La Belle et la Bête' },
   { title: 'L\'Air du vent', artist: 'Pocahontas', movieTitle: 'Pocahontas' },
+  { title: 'L\'Air du vent', artist: 'Native', movieTitle: 'Pocahontas' },
+  { title: 'L\'Air du vent', artist: 'Laura Mayne', movieTitle: 'Pocahontas' },
   { title: 'Des sauvages', artist: 'Pocahontas', movieTitle: 'Pocahontas' },
   { title: 'Au bout du rêve', artist: 'La Princesse et la Grenouille', movieTitle: 'La Princesse et la Grenouille' },
   { title: 'Mes amis de l\'au-delà', artist: 'La Princesse et la Grenouille', movieTitle: 'La Princesse et la Grenouille' },
@@ -577,14 +588,14 @@ export async function preparePlaylist(category, trackCount = 10, onProgress = nu
   const themeToAsk = customPrompt || category.aiTheme || category.name;
   const hasGeminiKey = !!getGeminiApiKey();
 
-  // On lance l'IA si c'est un thème libre OU si l'utilisateur a configuré Gemini pour les thèmes standards
-  const shouldInvokeAI = isCustom || hasGeminiKey;
+  // On lance la génération IA UNIQUEMENT pour le thème personnalisé libre.
+  // Les thèmes classiques possèdent tous un vivier de titres cultes soigneusement vérifiés.
+  const shouldInvokeAI = isCustom;
 
-  // 1. APPEL IA (Google Gemini si configuré, sinon service public sans clé)
+  // 1. GÉNÉRATION POUR THÈME LIBRE (Google Gemini si configuré, sinon service public sans clé)
   if (shouldInvokeAI) {
     if (onProgress) {
-      const aiProviderName = hasGeminiKey ? "Google Gemini" : "L'IA musicale";
-      onProgress(20, `${aiProviderName} compose votre sélection sur-mesure...`);
+      onProgress(20, "Génération du contenu de votre sélection...");
     }
 
     // On demande un buffer de sécurité substantiel pour compenser les éventuels morceaux introuvables sur iTunes
@@ -596,7 +607,7 @@ export async function preparePlaylist(category, trackCount = 10, onProgress = nu
       aiDecoys = Array.isArray(aiResult.decoys) ? aiResult.decoys : [];
 
       if (aiTracks.length > 0) {
-        if (onProgress) onProgress(50, "Extraction des extraits audio iTunes...");
+        if (onProgress) onProgress(50, "Génération du contenu : recherche des extraits audio...");
         let processed = 0;
 
         for (const item of aiTracks) {
@@ -638,9 +649,9 @@ export async function preparePlaylist(category, trackCount = 10, onProgress = nu
     }
   }
 
-  // 2. MODE SANS CLÉ (100% AUTONOME, INSTANTANÉ) OU COMPLÉMENT SI QUOTA IA INSUFFISANT
+  // 2. SÉLECTION DES TITRES CATALOGUE OU COMPLÉMENT SI BESOIN
   if (pool.length < trackCount) {
-    if (onProgress) onProgress(40, isCustom ? "Recherche musicale sur votre thème..." : "Finalisation de la playlist...");
+    if (onProgress) onProgress(40, isCustom ? "Génération du contenu sur votre thème..." : "Génération du contenu de la playlist...");
 
     const queriesToUse = isCustom && customPrompt
       ? getSmartThemeQueries(customPrompt)

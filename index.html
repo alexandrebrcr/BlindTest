@@ -100,7 +100,7 @@
       </div>
       <div class="header-actions">
         <button class="icon-btn" id="btn-sound-toggle" title="Activer / Désactiver les effets sonores">🔊</button>
-        <button class="icon-btn" id="btn-ai-settings" title="R&#233;glages IA (Google Gemini)" onclick="openAiModal()">🤖</button>
+        <button class="icon-btn" id="btn-ai-settings" title="Configuration Google Gemini" onclick="openAiModal()">🤖</button>
         <button class="icon-btn" id="btn-info-modal" title="R&#232;gles et installation" onclick="openInstructionsModal()">ℹ️</button>
       </div>
     </header>
@@ -171,13 +171,13 @@
         <!-- Rempli dynamiquement en JS -->
       </div>
 
-      <!-- Bloc Thème Personnalisé par IA -->
+      <!-- Bloc Thème Personnalisé -->
       <div id="box-custom-theme" class="glass-card" style="margin-bottom: 1.25rem; display: none; border-color: rgba(255, 210, 0, 0.4);">
         <label style="font-family: var(--font-display); font-size: 0.95rem; font-weight: 800; color: var(--accent-yellow); display: block; margin-bottom: 0.3rem;">
           ✨ Quel est votre thème personnalisé ?
         </label>
         <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 0.75rem;">
-          L'IA va composer une playlist sur-mesure en évitant les clichés trop évidents !
+          Génération automatique d'une sélection musicale sur-mesure pour votre thème !
         </p>
         <input type="text" class="input-answer" id="input-custom-theme" placeholder="Ex: Chansons avec un prénom, Tubes de l'été 2000..." style="margin-bottom: 0.6rem;">
         
@@ -230,7 +230,7 @@
     <section class="screen loading-screen" id="screen-loading">
       <div class="spinner-pulse">🎶</div>
       <h2 style="font-family: var(--font-display); font-size: 1.5rem;" id="loading-category-name">Préparation des morceaux...</h2>
-      <p style="color: var(--text-muted); font-size: 0.9rem;" id="loading-subtext">Chargement des extraits audio haute qualité</p>
+      <p style="color: var(--text-muted); font-size: 0.9rem;" id="loading-subtext">Génération du contenu en cours...</p>
       
       <div class="loading-progress-bar">
         <div class="loading-progress-fill" id="loading-progress-fill"></div>
@@ -514,14 +514,35 @@
         <div id="online-buzz-waiting">
           <div style="font-size: 1.1rem; font-weight: 700;">Écoutez la musique...</div>
           <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.2rem;">Les joueurs buzzent depuis leur smartphone !</div>
-          <button class="btn-secondary" id="btn-online-nobody" style="width: auto; margin: 0.75rem auto 0; padding: 0.4rem 0.9rem; font-size: 0.8rem;">
-            Personne ne sait 🤷‍♂️
-          </button>
+          <div style="display: flex; justify-content: center; gap: 0.5rem; margin-top: 0.75rem; flex-wrap: wrap;">
+            <button class="btn-secondary" id="btn-online-waiting-peek" style="width: auto; padding: 0.4rem 0.9rem; font-size: 0.8rem;">
+              👁️ Voir la réponse
+            </button>
+            <button class="btn-secondary" id="btn-online-nobody" style="width: auto; padding: 0.4rem 0.9rem; font-size: 0.8rem;">
+              Personne ne sait 🤷‍♂️
+            </button>
+          </div>
+          <div id="online-waiting-secret-preview" style="display: none; margin-top: 0.6rem; padding: 0.55rem 0.85rem; background: rgba(0, 242, 254, 0.08); border: 1px solid rgba(0, 242, 254, 0.25); border-radius: 8px; text-align: center;">
+            <div style="font-weight: 800; font-size: 0.95rem; color: #fff;" id="online-waiting-peek-title"></div>
+            <div style="color: var(--primary-cyan); font-weight: 600; font-size: 0.85rem; margin-top: 0.2rem;" id="online-waiting-peek-artist"></div>
+          </div>
         </div>
 
         <div id="online-buzz-active" style="display: none;">
           <div style="font-family: var(--font-display); font-size: 1.5rem; font-weight: 900;" id="online-buzzed-player-title">Alex a buzzé !</div>
-          <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.8rem;">Verdict de la réponse orale :</div>
+          <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.5rem;">Verdict de la réponse orale :</div>
+
+          <!-- Bouton de vérification secrète de la réponse pour l'Hôte -->
+          <div style="margin-bottom: 0.75rem;">
+            <button type="button" class="btn-secondary" id="btn-online-peek-answer" style="width: auto; margin: 0 auto; padding: 0.35rem 0.85rem; font-size: 0.82rem;">
+              👁️ Vérifier la réponse
+            </button>
+            <div id="online-secret-answer-preview" style="display: none; margin-top: 0.5rem; padding: 0.6rem 0.85rem; background: rgba(0, 242, 254, 0.08); border: 1px solid rgba(0, 242, 254, 0.25); border-radius: 8px; text-align: center;">
+              <div style="font-weight: 800; font-size: 0.95rem; color: #fff;" id="online-peek-title"></div>
+              <div style="color: var(--primary-cyan); font-weight: 600; font-size: 0.85rem; margin-top: 0.2rem;" id="online-peek-artist"></div>
+            </div>
+          </div>
+
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem;">
             <button class="btn-correct" id="btn-online-verdict-correct">✅ Bonne (+1)</button>
             <button class="btn-wrong" id="btn-online-verdict-wrong">❌ Faux</button>
@@ -573,6 +594,17 @@
         <div class="buzz-winner-badge" id="buzz-winner-name" style="color: var(--primary-cyan);">Joueur 1 a buzzé !</div>
         <div style="font-size: 0.9rem; color: var(--text-muted);">Donnez votre réponse à voix haute :</div>
         <div class="buzz-countdown" id="buzz-modal-countdown">5</div>
+
+        <!-- Bouton de vérification secrète de la réponse -->
+        <div style="margin: 0.5rem 0 0.75rem;">
+          <button type="button" class="btn-secondary" id="btn-buzz-peek-answer" style="width: auto; margin: 0 auto; padding: 0.35rem 0.85rem; font-size: 0.82rem;">
+            👁️ Vérifier la réponse
+          </button>
+          <div id="buzz-secret-answer-preview" style="display: none; margin-top: 0.5rem; padding: 0.6rem 0.85rem; background: rgba(0, 242, 254, 0.08); border: 1px solid rgba(0, 242, 254, 0.25); border-radius: 8px; text-align: center;">
+            <div style="font-weight: 800; font-size: 0.95rem; color: #fff;" id="buzz-peek-title"></div>
+            <div style="color: var(--primary-cyan); font-weight: 600; font-size: 0.85rem; margin-top: 0.2rem;" id="buzz-peek-artist"></div>
+          </div>
+        </div>
 
         <div class="buzz-verdict-btns">
           <button class="btn-correct" id="btn-buzz-correct">✅ Bonne (+1)</button>
